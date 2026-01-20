@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Simulator</title>
+    <style>
+        /* Базовые стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', sans-serif;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Экран загрузки BIOS */
+        #bios-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .bios-text {
+            color: #90ee90;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            white-space: pre;
+            animation: typing 4s steps(40, end);
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        .bios-logo {
+            color: #fff;
+            font-size: 48px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Экран выбора Windows */
+        #windows-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 900;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-title {
+            font-size: 48px;
+            margin-bottom: 50px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .windows-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 900px;
+        }
+
+        .windows-version {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .windows-version:hover {
+            transform: translateY(-10px);
+            border-color: #4dabf7;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .windows-version .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .windows-version h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .windows-version p {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* Экран загрузки Windows */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 800;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-logo {
+            font-size: 60px;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0078d7, #4dabf7);
+            transition: width 0.3s ease;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        /* Основной рабочий стол */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Фон для разных версий Windows */
+        .windows-7-bg { background: linear-gradient(135deg, #1d539f 0%, #0c3b8c 100%); }
+        .windows-8-bg { background: linear-gradient(135deg, #68217a 0%, #4b0082 100%); }
+        .windows-9-bg { background: linear-gradient(135deg, #00b294 0%, #008272 100%); }
+        .windows-10-bg { background: linear-gradient(135deg, #0078d7 0%, #106ebe 100%); }
+        .windows-11-bg { background: linear-gradient(135deg, #000000 0%, #333333 100%); }
+
+        /* Рабочий стол */
+        .desktop-icons {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 20px;
+        }
+
+        /* Остальные стили (из предыдущего примера) остаются без изменений */
+        .desktop-icon {
+            width: 70px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.2s;
+            user-select: none;
+            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-icon.selected {
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .icon-img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Панель задач - стили для разных версий */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-top: 1px solid;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Windows 7 */
+        .taskbar.windows-7 {
+            background: linear-gradient(to bottom, #316ac5 0%, #1f4a9b 100%);
+            border-top-color: #5a8de1;
+        }
+
+        /* Windows 8/8.1 */
+        .taskbar.windows-8 {
+            background: rgba(45, 45, 45, 0.95);
+            border-top-color: #68217a;
+        }
+
+        /* Windows 9 */
+        .taskbar.windows-9 {
+            background: linear-gradient(to bottom, #00b294 0%, #008272 100%);
+            border-top-color: #00d4b4;
+        }
+
+        /* Windows 10 */
+        .taskbar.windows-10 {
+            background: rgba(0, 120, 215, 0.95);
+            border-top-color: #4dabf7;
+        }
+
+        /* Windows 11 */
+        .taskbar.windows-11 {
+            background: rgba(0, 0, 0, 0.8);
+            border-top-color: #444;
+            height: 48px;
+            border-radius: 10px 10px 0 0;
+            margin: 0 10px 5px 10px;
+            width: calc(100% - 20px);
+        }
+
+        .start-button {
+            height: 34px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            margin-right: 10px;
+            border-radius: 3px;
+            border: 1px solid;
+            color: white;
+        }
+
+        /* Цвета кнопки Пуск для разных версий */
+        .start-button.windows-7 {
+            background: linear-gradient(to bottom, #6ba543 0%, #4d7b2f 100%);
+            border-color: #5a9435;
+        }
+
+        .start-button.windows-8 {
+            background: linear-gradient(to bottom, #68217a 0%, #4b0082 100%);
+            border-color: #8a2be2;
+        }
+
+        .start-button.windows-9 {
+            background: linear-gradient(to bottom, #00d4b4 0%, #00b294 100%);
+            border-color: #00f5d4;
+        }
+
+        .start-button.windows-10 {
+            background: linear-gradient(to bottom, #4dabf7 0%, #0078d7 100%);
+            border-color: #6bc0ff;
+        }
+
+        .start-button.windows-11 {
+            background: transparent;
+            border: none;
+            font-size: 14px;
+        }
+
+        .taskbar-apps {
+            flex: 1;
+            display: flex;
+            gap: 5px;
+        }
+
+        .taskbar-app {
+            height: 34px;
+            padding: 0 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+            border: 1px solid;
+        }
+
+        /* Окна - разные стили */
+        .window {
+            position: absolute;
+            border-radius: 6px 6px 0 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .window.active {
+            display: block;
+            z-index: 100;
+        }
+
+        /* Windows 7 окно */
+        .window.windows-7 {
+            background: linear-gradient(to bottom, #f1f1f1 0%, #e5e5e5 100%);
+            border: 1px solid #a6a6a6;
+        }
+
+        .window.windows-7 .window-header {
+            background: linear-gradient(to bottom, #4c8ce6 0%, #2d62b9 100%);
+        }
+
+        /* Windows 10 окно */
+        .window.windows-10 {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .window.windows-10 .window-header {
+            background: #0078d7;
+            height: 40px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        /* Windows 11 окно */
+        .window.windows-11 {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .window.windows-11 .window-header {
+            background: #000;
+            height: 48px;
+            border-radius: 12px 12px 0 0;
+            padding: 0 20px;
+        }
+
+        /* Проводник */
+        .explorer {
+            display: flex;
+            height: 100%;
+        }
+
+        .explorer-sidebar {
+            width: 200px;
+            background: rgba(240, 240, 240, 0.9);
+            border-right: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .explorer-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .explorer-item {
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .explorer-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .file-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Меню Пуск */
+        .start-menu {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            width: 400px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* Центр уведомлений */
+        .notification-center {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            border-left: 1px solid #ccc;
+        }
+
+        .notification-center.active {
+            right: 0;
+        }
+
+        /* Widgets для Windows 11 */
+        .widgets-panel {
+            position: fixed;
+            left: -400px;
+            top: 0;
+            width: 400px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        .widgets-panel.active {
+            left: 0;
+        }
+
+        /* Заставка */
+        .screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screensaver-logo {
+            font-size: 72px;
+            color: #fff;
+            animation: screensaver-animation 10s linear infinite;
+        }
+
+        @keyframes screensaver-animation {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.2); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран BIOS -->
+    <div id="bios-screen">
+        <div class="bios-logo">BIOS v2.0</div>
+        <div class="bios-text">
+            American Megatrends
+            Copyright (C) 2024
+            
+            Main Processor: Intel Core i9 14900K
+            Memory Testing: 32768MB OK
+            Detecting IDE drives...
+            SATA-0: Samsung SSD 990 PRO 2TB
+            SATA-1: Seagate HDD 4TB
+            
+            Press DEL to enter SETUP
+            Press F11 for Boot Menu
+        </div>
+        <div id="bios-progress" style="color: #fff; margin-top: 20px;">Initializing hardware...</div>
+    </div>
+
+    <!-- Выбор версии Windows -->
+    <div id="windows-selector">
+        <h1 class="windows-title">Выберите версию Windows</h1>
+        <div class="windows-grid">
+            <div class="windows-version" onclick="selectWindows(7)">
+                <div class="icon">🪟</div>
+                <h3>Windows 7</h3>
+                <p>Классический интерфейс Aero Glass</p>
+            </div>
+            <div class="windows-version" onclick="selectWindows(8)">
+                <div class="icon">🪟</div>
+                <h3>Windows 8</h3>
+                <p>Современный плиточный интерфейс</p>
+            </div>
+            <div class="windows-version" onclick="selectWindows(9)">
+                <div class="icon">🪟</div>
+                <h3>Windows 9</h3>
+                <p>Экспериментальный гибридный дизайн</p>
+            </div>
+            <div class="windows-version" onclick="selectWindows(10)">
+                <div class="icon">🪟</div>
+                <h3>Windows 10</h3>
+                <p>Универсальная операционная система</p>
+            </div>
+            <div class="windows-version" onclick="selectWindows(11)">
+                <div class="icon">🪟</div>
+                <h3>Windows 11</h3>
+                <p>Современный дизайн с закругленными углами</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран загрузки -->
+    <div id="loading-screen">
+        <div class="windows-logo" id="loading-logo">Windows</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+        <div class="loading-text" id="loading-text">Подготовка Windows...</div>
+    </div>
+
+    <!-- Рабочий стол -->
+    <div id="desktop">
+        <div class="desktop-icons" id="desktop-icons">
+            <!-- Иконки будут добавлены через JavaScript -->
+        </div>
+    </div>
+
+    <!-- Панель задач -->
+    <div class="taskbar" id="taskbar">
+        <div class="start-button" id="start-button" onclick="toggleStartMenu()">
+            <span class="start-icon">⚡</span>
+            <span id="start-text">Пуск</span>
+        </div>
+        <div class="taskbar-apps" id="taskbar-apps"></div>
+        <div class="system-tray">
+            <div class="time" id="time">10:00</div>
+            <div class="notification-icon" onclick="toggleNotificationCenter()">🔔</div>
+        </div>
+    </div>
+
+    <!-- Окно проводника -->
+    <div id="window-explorer" class="window">
+        <div class="window-header">
+            <div class="window-title">
+                <span>📁</span>
+                <span id="explorer-title">Проводник</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize">−</button>
+                <button class="window-btn maximize">□</button>
+                <button class="window-btn close" onclick="closeWindow('explorer')">✕</button>
+            </div>
+        </div>
+        <div class="explorer">
+            <div class="explorer-sidebar">
+                <div class="explorer-item" onclick="explorerNavigate('desktop')">
+                    <span>🏠</span> Рабочий стол
+                </div>
+                <div class="explorer-item" onclick="explorerNavigate('documents')">
+                    <span>📄</span> Документы
+                </div>
+                <div class="explorer-item" onclick="explorerNavigate('pictures')">
+                    <span>🖼️</span> Изображения
+                </div>
+                <div class="explorer-item" onclick="explorerNavigate('music')">
+                    <span>🎵</span> Музыка
+                </div>
+                <div class="explorer-item" onclick="explorerNavigate('videos')">
+                    <span>🎬</span> Видео
+                </div>
+                <div class="explorer-item" onclick="explorerNavigate('computer')">
+                    <span>🖥️</span> Этот компьютер
+                </div>
+            </div>
+            <div class="explorer-content" id="explorer-content">
+                <!-- Содержимое проводника -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Меню Пуск -->
+    <div class="start-menu" id="start-menu">
+        <div style="padding: 20px;">
+            <h3>Программы</h3>
+            <div id="start-programs"></div>
+        </div>
+    </div>
+
+    <!-- Центр уведомлений -->
+    <div class="notification-center" id="notification-center">
+        <div style="padding: 20px;">
+            <h3>Уведомления</h3>
+            <div id="notifications-list"></div>
+        </div>
+    </div>
+
+    <!-- Заставка -->
+    <div class="screensaver" id="screensaver">
+        <div class="screensaver-logo" id="screensaver-logo">Windows</div>
+    </div>
+
+    <script>
+        let currentWindowsVersion = 7;
+        let idleTimer;
+        let isScreensaverActive = false;
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('bios-progress').textContent = 'Press any key to continue...';
+                document.addEventListener('keydown', startBootProcess);
+                document.addEventListener('click', startBootProcess);
+            }, 3000);
+        });
+
+        function startBootProcess() {
+            document.removeEventListener('keydown', startBootProcess);
+            document.removeEventListener('click', startBootProcess);
+            
+            document.getElementById('bios-screen').style.display = 'none';
+            document.getElementById('windows-selector').style.display = 'flex';
+        }
+
+        function selectWindows(version) {
+            currentWindowsVersion = version;
+            document.getElementById('windows-selector').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'flex';
+            
+            // Устанавливаем логотип в зависимости от версии
+            const logos = {
+                7: 'Windows 7',
+                8: 'Windows 8',
+                9: 'Windows 9',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            document.getElementById('loading-logo').textContent = logos[version];
+            
+            // Запускаем прогресс загрузки
+            simulateWindowsBoot();
+        }
+
+        function simulateWindowsBoot() {
+            const progress = document.getElementById('loading-progress');
+            const text = document.getElementById('loading-text');
+            let progressValue = 0;
+            
+            const steps = [
+                { percent: 10, text: 'Загрузка файлов Windows...' },
+                { percent: 25, text: 'Подготовка устройств...' },
+                { percent: 40, text: 'Загрузка драйверов...' },
+                { percent: 60, text: 'Инициализация системы...' },
+                { percent: 80, text: 'Подготовка рабочего стола...' },
+                { percent: 100, text: 'Добро пожаловать!' }
+            ];
+            
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    progress.style.width = step.percent + '%';
+                    text.textContent = step.text;
+                    
+                    if (step.percent === 100) {
+                        setTimeout(() => {
+                            loadDesktop();
+                        }, 1000);
+                    }
+                }, index * 1500);
+            });
+        }
+
+        function loadDesktop() {
+            document.getElementById('loading-screen').style.display = 'none';
+            const desktop = document.getElementById('desktop');
+            const taskbar = document.getElementById('taskbar');
+            
+            // Устанавливаем стили в зависимости от версии Windows
+            desktop.className = 'windows-' + currentWindowsVersion + '-bg';
+            desktop.style.display = 'block';
+            
+            taskbar.className = 'taskbar windows-' + currentWindowsVersion;
+            document.getElementById('start-button').className = 'start-button windows-' + currentWindowsVersion;
+            
+            // Добавляем иконки на рабочий стол
+            const desktopIcons = document.getElementById('desktop-icons');
+            const icons = getDesktopIcons();
+            desktopIcons.innerHTML = icons.map(icon => `
+                <div class="desktop-icon" onclick="${icon.action}">
+                    <div class="icon-img">${icon.icon}</div>
+                    <span>${icon.name}</span>
+                </div>
+            `).join('');
+            
+            // Обновляем время
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Запускаем таймер для заставки
+            startIdleTimer();
+            
+            // Добавляем обработчики для заставки
+            document.addEventListener('mousemove', resetIdleTimer);
+            document.addEventListener('keydown', resetIdleTimer);
+        }
+
+        function getDesktopIcons() {
+            const baseIcons = [
+                { icon: '🖥️', name: 'Этот компьютер', action: 'openExplorer(\"computer\")' },
+                { icon: '📁', name: 'Документы', action: 'openExplorer(\"documents\")' },
+                { icon: '🖼️', name: 'Изображения', action: 'openExplorer(\"pictures\")' },
+                { icon: '🌐', name: 'Браузер', action: 'openWindow(\"browser\")' },
+                { icon: '📝', name: 'Блокнот', action: 'openWindow(\"notepad\")' },
+                { icon: '🎵', name: 'Музыка', action: 'openExplorer(\"music\")' },
+                { icon: '🎮', name: 'Игры', action: 'openWindow(\"games\")' },
+                { icon: '⚙️', name: 'Панель управления', action: 'openWindow(\"control\")' },
+                { icon: '🗑️', name: 'Корзина', action: 'openWindow(\"recycle\")' }
+            ];
+            
+            // Добавляем специфичные иконки для разных версий
+            if (currentWindowsVersion >= 8) {
+                baseIcons.push({ icon: '🛒', name: 'Магазин', action: 'openWindow(\"store\")' });
+            }
+            if (currentWindowsVersion >= 10) {
+                baseIcons.push({ icon: '🤖', name: 'Cortana', action: 'openWindow(\"cortana\")' });
+            }
+            if (currentWindowsVersion >= 11) {
+                baseIcons.push({ icon: '📱', name: 'Android Apps', action: 'openWindow(\"android\")' });
+            }
+            
+            return baseIcons;
+        }
+
+        function openExplorer(folder) {
+            const window = document.getElementById('window-explorer');
+            window.classList.add('active');
+            window.classList.add('windows-' + currentWindowsVersion);
+            explorerNavigate(folder);
+        }
+
+        function explorerNavigate(folder) {
+            const title = document.getElementById('explorer-title');
+            const content = document.getElementById('explorer-content');
+            
+            const folders = {
+                desktop: { name: 'Рабочий стол', files: ['Мои документы', 'Мои изображения', 'Корзина'] },
+                documents: { name: 'Документы', files: ['Отчет.docx', 'Презентация.pptx', 'Бюджет.xlsx'] },
+                pictures: { name: 'Изображения', files: ['Фото1.jpg', 'Фото2.png', 'Обои.bmp'] },
+                music: { name: 'Музыка', files: ['Песня1.mp3', 'Песня2.wav', 'Альбом.mp3'] },
+                videos: { name: 'Видео', files: ['Видео1.mp4', 'Фильм.mkv', 'Клип.avi'] },
+                computer: { name: 'Этот компьютер', files: ['Локальный диск (C:)', 'Локальный диск (D:)', 'CD-привод (E:)'] }
+            };
+            
+            const current = folders[folder];
+            title.textContent = current.name;
+            
+            content.innerHTML = `
+                <h3>${current.name}</h3>
+                <div class="files-grid">
+                    ${current.files.map(file => `
+                        <div class="file-item">
+                            <div class="icon-img">📄</div>
+                            <span>${file}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function openWindow(windowName) {
+            // Закрываем все окна
+            document.querySelectorAll('.window.active').forEach(w => w.classList.remove('active'));
+            
+            // Открываем нужное окно
+            let windowId = 'window-' + windowName;
+            let window = document.getElementById(windowId);
+            
+            if (!window) {
+                // Создаем окно, если его нет
+                window = createWindow(windowName);
+                document.body.appendChild(window);
+            }
+            
+            window.classList.add('active');
+            window.classList.add('windows-' + currentWindowsVersion);
+        }
+
+        function createWindow(name) {
+            const windows = {
+                browser: {
+                    title: 'Браузер',
+                    icon: '🌐',
+                    content: '<h3>Windows Browser</h3><p>Веб-браузер в стиле Windows ' + currentWindowsVersion + '</p>'
+                },
+                notepad: {
+                    title: 'Блокнот',
+                    icon: '📝',
+                    content: '<textarea style="width:100%;height:200px;border:1px solid #ccc;padding:10px;">Начните печатать здесь...</textarea>'
+                },
+                control: {
+                    title: 'Панель управления',
+                    icon: '⚙️',
+                    content: '<h3>Настройки системы</h3><p>Выберите категорию для настройки...</p>'
+                },
+                games: {
+                    title: 'Игры',
+                    icon: '🎮',
+                    content: '<h3>Игры Windows</h3><p>Косынка • Сапер • Пасьянс</p>'
+                }
+            };
+            
+            const win = windows[name] || {
+                title: name,
+                icon: '📁',
+                content: '<p>Окно приложения</p>'
+            };
+            
+            const div = document.createElement('div');
+            div.id = 'window-' + name;
+            div.className = 'window';
+            div.style.top = '100px';
+            div.style.left = (Math.random() * 500) + 'px';
+            div.innerHTML = `
+                <div class="window-header">
+                    <div class="window-title">
+                        <span>${win.icon}</span>
+                        <span>${win.title}</span>
+                    </div>
+                    <div class="window-controls">
+                        <button class="window-btn minimize">−</button>
+                        <button class="window-btn maximize">□</button>
+                        <button class="window-btn close" onclick="closeWindow('${name}')">✕</button>
+                    </div>
+                </div>
+                <div class="window-content">${win.content}</div>
+            `;
+            
+            // Добавляем функционал перетаскивания
+            makeWindowDraggable(div);
+            
+            return div;
+        }
+
+        function closeWindow(name) {
+            const window = document.getElementById('window-' + name);
+            if (window) {
+                window.classList.remove('active');
+            }
+        }
+
+        function makeWindowDraggable(window) {
+            const header = window.querySelector('.window-header');
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - window.offsetLeft;
+                offsetY = e.clientY - window.offsetTop;
+                window.style.zIndex = '1000';
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+            
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                window.style.left = (e.clientX - offsetX) + 'px';
+                window.style.top = (e.clientY - offsetY) + 'px';
+            }
+            
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            
+            // Наполняем меню программами в зависимости от версии Windows
+            if (menu.style.display === 'block') {
+                const programs = document.getElementById('start-programs');
+                const apps = getStartMenuApps();
+                programs.innerHTML = apps.map(app => `
+                    <div class="explorer-item" onclick="${app.action}">
+                        <span>${app.icon}</span> ${app.name}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function getStartMenuApps() {
+            const baseApps = [
+                { icon: '🖥️', name: 'Проводник', action: 'openExplorer(\"computer\")' },
+                { icon: '🌐', name: 'Браузер', action: 'openWindow(\"browser\")' },
+                { icon: '📝', name: 'Блокнот', action: 'openWindow(\"notepad\")' },
+                { icon: '🎮', name: 'Игры', action: 'openWindow(\"games\")' },
+                { icon: '⚙️', name: 'Панель управления', action: 'openWindow(\"control\")' },
+                { icon: '🖼️', name: 'Paint', action: 'openWindow(\"paint\")' },
+                { icon: '📧', name: 'Почта', action: 'openWindow(\"mail\")' }
+            ];
+            
+            // Windows 8 и выше
+            if (currentWindowsVersion >= 8) {
+                baseApps.push({ icon: '🛒', name: 'Магазин', action: 'openWindow(\"store\")' });
+            }
+            
+            // Windows 10 и выше
+            if (currentWindowsVersion >= 10) {
+                baseApps.push({ icon: '🤖', name: 'Cortana', action: 'openWindow(\"cortana\")' });
+                baseApps.push({ icon: '🎵', name: 'Groove Music', action: 'openWindow(\"music\")' });
+            }
+            
+            // Windows 11
+            if (currentWindowsVersion >= 11) {
+                baseApps.push({ icon: '💬', name: 'Teams', action: 'openWindow(\"teams\")' });
+                baseApps.push({ icon: '📱', name: 'Подсистема Android', action: 'openWindow(\"android\")' });
+            }
+            
+            return baseApps;
+        }
+
+        function toggleNotificationCenter() {
+            const center = document.getElementById('notification-center');
+            center.classList.toggle('active');
+            
+            if (center.classList.contains('active')) {
+                const list = document.getElementById('notifications-list');
+                const notifications = [
+                    'Система: Windows обновлена до последней версии',
+                    'Безопасность: Защитник Windows активен',
+                    'Время: Напоминание о встрече в 15:00',
+                    'Погода: Сегодня солнечно, +22°C'
+                ];
+                
+                list.innerHTML = notifications.map(note => `
+                    <div class="explorer-item">
+                        <span>📢</span> ${note}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            const dateString = now.toLocaleDateString('ru-RU', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            });
+            
+            document.getElementById('time').innerHTML = `
+                <div>${timeString}</div>
+                <div style="font-size:10px">${dateString}</div>
+            `;
+        }
+
+        // Заставка
+        function startIdleTimer() {
+            idleTimer = setTimeout(showScreensaver, 30000); // 30 секунд бездействия
+        }
+
+        function resetIdleTimer() {
+            if (isScreensaverActive) {
+                hideScreensaver();
+            }
+            clearTimeout(idleTimer);
+            startIdleTimer();
+        }
+
+        function showScreensaver() {
+            isScreensaverActive = true;
+            const screensaver = document.getElementById('screensaver');
+            const logo = document.getElementById('screensaver-logo');
+            
+            // Устанавливаем логотип в зависимости от версии Windows
+            const logos = {
+                7: 'Windows 7',
+                8: 'Windows 8',
+                9: 'Windows 9',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            logo.textContent = logos[currentWindowsVersion];
+            
+            screensaver.style.display = 'flex';
+        }
+
+        function hideScreensaver() {
+            isScreensaverActive = false;
+            document.getElementById('screensaver').style.display = 'none';
+        }
+
+        // Специфичные функции для разных версий Windows
+        if (currentWindowsVersion >= 8) {
+            // Функции для Windows 8 (плиточный интерфейс)
+            function showStartScreen() {
+                const startScreen = document.createElement('div');
+                startScreen.id = 'start-screen';
+                startScreen.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: #68217a; z-index: 1500; display: grid;
+                    grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px;
+                `;
+                
+                const tiles = [
+                    { name: 'Почта', color: '#0078d7' },
+                    { name: 'Календарь', color: '#107c10' },
+                    { name: 'Фото', color: '#d83b01' },
+                    { name: 'Музыка', color: '#e3008c' },
+                    { name: 'Видео', color: '#68217a' },
+                    { name: 'Карты', color: '#00b294' },
+                    { name: 'Погода', color: '#008272' },
+                    { name: 'Новости', color: '#004b1c' }
+                ];
+                
+                startScreen.innerHTML = tiles.map(tile => `
+                    <div style="background:${tile.color};color:white;display:flex;align-items:center;
+                    justify-content:center;font-size:24px;cursor:pointer;border-radius:5px;">
+                        ${tile.name}
+                    </div>
+                `).join('');
+                
+                document.body.appendChild(startScreen);
+            }
+        }
+
+        if (currentWindowsVersion >= 11) {
+            // Функции для Windows 11 (виджеты)
+            function showWidgets() {
+                const widgets = document.createElement('div');
+                widgets.className = 'widgets-panel active';
+                widgets.innerHTML = `
+                    <h3>Виджеты</h3>
+                    <div style="display:grid;gap:10px;margin-top:20px;">
+                        <div style="background:#f0f0f0;padding:15px;border-radius:10px;">
+                            <h4>Погода</h4>
+                            <p>Солнечно, +22°C</p>
+                        </div>
+                        <div style="background:#f0f0f0;padding:15px;border-radius:10px;">
+                            <h4>Календарь</h4>
+                            <p>Сегодня: ${new Date().toLocaleDateString('ru-RU')}</p>
+                        </div>
+                    </div>
+                `;
+                
+                widgets.onclick = function(e) {
+                    if (e.target === widgets) {
+                        widgets.classList.remove('active');
+                        setTimeout(() => widgets.remove(), 300);
+                    }
+                };
+                
+                document.body.appendChild(widgets);
+            }
+        }
+    </script>
+</body>
+</html>
