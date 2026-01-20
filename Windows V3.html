@@ -1,0 +1,2999 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Simulator - Full Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Экран BIOS */
+        #bios-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            color: #90ee90;
+            padding: 20px;
+        }
+
+        .bios-logo {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .bios-text {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-line;
+            text-align: left;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+
+        /* Экран выбора Windows */
+        #windows-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .windows-title {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .windows-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .windows-version {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-version:hover {
+            transform: translateY(-5px);
+            border-color: #4dabf7;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .windows-version .icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .windows-version h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        /* Экран загрузки */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 8000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-logo {
+            font-size: 48px;
+            margin-bottom: 30px;
+            color: white;
+            font-weight: 300;
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0078d7, #4dabf7);
+            transition: width 0.3s ease;
+        }
+
+        .loading-text {
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Рабочий стол */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background-size: cover;
+        }
+
+        /* Фоны для разных версий Windows */
+        .win7-bg { 
+            background: linear-gradient(135deg, #1d539f 0%, #0c3b8c 100%); 
+        }
+        .win8-bg { 
+            background: linear-gradient(135deg, #68217a 0%, #4b0082 100%); 
+        }
+        .win9-bg { 
+            background: linear-gradient(135deg, #00b294 0%, #008272 100%); 
+        }
+        .win10-bg { 
+            background: linear-gradient(135deg, #0078d7 0%, #106ebe 100%); 
+        }
+        .win11-bg { 
+            background: linear-gradient(135deg, #000000 0%, #333333 100%); 
+        }
+
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .desktop-icon {
+            width: 70px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .icon-img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #333;
+        }
+
+        /* Панель задач */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 500;
+        }
+
+        .start-button {
+            height: 32px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            border-radius: 3px;
+            color: white;
+            margin-right: 10px;
+            min-width: 80px;
+        }
+
+        .win7-start {
+            background: linear-gradient(to bottom, #6ba543 0%, #4d7b2f 100%);
+            border: 1px solid #5a9435;
+        }
+
+        .win8-start {
+            background: linear-gradient(to bottom, #68217a 0%, #4b0082 100%);
+            border: 1px solid #8a2be2;
+        }
+
+        .win9-start {
+            background: linear-gradient(to bottom, #00d4b4 0%, #00b294 100%);
+            border: 1px solid #00f5d4;
+        }
+
+        .win10-start {
+            background: linear-gradient(to bottom, #4dabf7 0%, #0078d7 100%);
+            border: 1px solid #6bc0ff;
+        }
+
+        .win11-start {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        .taskbar-apps {
+            flex: 1;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding: 0 10px;
+        }
+
+        .taskbar-app {
+            height: 32px;
+            padding: 0 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        .taskbar-app.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .taskbar-app:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 12px;
+            padding: 0 10px;
+        }
+
+        .time-display {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Окна */
+        .window {
+            position: absolute;
+            min-width: 400px;
+            min-height: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            overflow: hidden;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .window.active {
+            display: block;
+            animation: windowAppear 0.3s ease;
+        }
+
+        @keyframes windowAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .window-header {
+            height: 40px;
+            background: linear-gradient(to bottom, #4c8ce6 0%, #2d62b9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            color: white;
+            font-size: 14px;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .window-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .window-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .window-btn.close:hover {
+            background: #e81123;
+        }
+
+        .window-content {
+            padding: 20px;
+            height: calc(100% - 40px);
+            overflow: auto;
+            color: #333;
+        }
+
+        /* Microsoft Store */
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .store-app {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .store-app:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .store-app-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #0078d7, #4dabf7);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .store-app-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .store-app-desc {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Игры */
+        .game-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Block Blast Game */
+        .block-blast-board {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 2px;
+            margin: 20px auto;
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .block-blast-cell {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .block-blast-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .game-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .game-stat {
+            background: #0078d7;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            min-width: 100px;
+        }
+
+        /* Калькулятор */
+        .calculator {
+            max-width: 300px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .calculator-display {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: right;
+            font-size: 24px;
+            font-family: monospace;
+            min-height: 60px;
+            word-break: break-all;
+        }
+
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calc-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .calc-btn:hover {
+            background: #e8f0fe;
+        }
+
+        .calc-btn.operator {
+            background: #4dabf7;
+            color: white;
+        }
+
+        .calc-btn.equals {
+            background: #0078d7;
+            color: white;
+            grid-column: span 2;
+        }
+
+        /* Paint */
+        .paint-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .paint-tools {
+            width: 60px;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .paint-tool {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: white;
+        }
+
+        .paint-tool.active {
+            border-color: #0078d7;
+            background: #e8f0fe;
+        }
+
+        .paint-canvas-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .paint-canvas {
+            border: 2px solid #333;
+            background: white;
+            cursor: crosshair;
+        }
+
+        .paint-colors {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .paint-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+
+        /* Музыкальный плеер */
+        .music-player {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .album-art {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #68217a, #4b0082);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+        }
+
+        .player-controls {
+            padding: 20px;
+        }
+
+        .song-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .song-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .song-artist {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            width: 30%;
+            background: #0078d7;
+            border-radius: 2px;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #0078d7;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn.play {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+        }
+
+        /* Браузер */
+        .browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .browser-navbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .browser-nav-btn {
+            padding: 5px 10px;
+            border: none;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .browser-url-bar {
+            flex: 1;
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .browser-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .webpage {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .webpage h1 {
+            color: #0078d7;
+            margin-bottom: 20px;
+        }
+
+        /* Медиа-плеер */
+        .media-player {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-player {
+            flex: 1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .video-controls {
+            padding: 15px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .video-control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Почта */
+        .mail-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .mail-sidebar {
+            width: 200px;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+            padding: 15px;
+        }
+
+        .mail-folders {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mail-folder {
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .mail-folder.active {
+            background: #0078d7;
+            color: white;
+        }
+
+        .mail-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .mail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mail-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Заставка */
+        #screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screensaver-logo {
+            font-size: 60px;
+            color: white;
+            animation: screensaverFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes screensaverFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        /* Кнопки для игр */
+        .game-button {
+            padding: 10px 20px;
+            background: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .game-button:hover {
+            background: #005a9e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран BIOS -->
+    <div id="bios-screen">
+        <div class="bios-logo">BIOS v2.0</div>
+        <div class="bios-text">
+            American Megatrends
+            Copyright (C) 2024
+            
+            Main Processor: Intel Core i9 14900K
+            Memory Testing: 32768MB OK
+            
+            Detecting IDE drives...
+            SATA-0: Samsung SSD 990 PRO 2TB
+            SATA-1: Seagate HDD 4TB
+            
+            Press any key to continue...
+        </div>
+    </div>
+
+    <!-- Экран выбора Windows -->
+    <div id="windows-selector">
+        <h1 class="windows-title">Выберите версию Windows</h1>
+        <div class="windows-grid">
+            <div class="windows-version" onclick="selectWindowsVersion(7)">
+                <div class="icon">🪟</div>
+                <h3>Windows 7</h3>
+                <p>Классический интерфейс Aero Glass</p>
+            </div>
+            <div class="windows-version" onclick="selectWindowsVersion(10)">
+                <div class="icon">🪟</div>
+                <h3>Windows 10</h3>
+                <p>Универсальная операционная система</p>
+            </div>
+            <div class="windows-version" onclick="selectWindowsVersion(11)">
+                <div class="icon">🪟</div>
+                <h3>Windows 11</h3>
+                <p>Современный дизайн с закругленными углами</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран загрузки -->
+    <div id="loading-screen">
+        <div class="windows-logo" id="loading-logo">Windows</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <div class="loading-text" id="loading-text">Подготовка Windows...</div>
+    </div>
+
+    <!-- Рабочий стол -->
+    <div id="desktop">
+        <div class="desktop-icons" id="desktop-icons">
+            <!-- Иконки будут добавлены через JS -->
+        </div>
+    </div>
+
+    <!-- Панель задач -->
+    <div class="taskbar" id="taskbar">
+        <button class="start-button" id="start-button" onclick="toggleStartMenu()">
+            <span>⚡</span>
+            <span>Пуск</span>
+        </button>
+        <div class="taskbar-apps" id="taskbar-apps"></div>
+        <div class="system-tray">
+            <div class="time-display" id="time-display" onclick="toggleNotificationCenter()">
+                <div id="time">10:00</div>
+                <div id="date" style="font-size: 10px;">Пн, 20 янв</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Microsoft Store -->
+    <div id="window-store" class="window" style="top: 50px; left: 100px; width: 800px; height: 600px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🛒</span>
+                <span>Microsoft Store</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('store')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('store')">□</button>
+                <button class="window-btn close" onclick="closeWindow('store')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <h2 style="color: #333; margin-bottom: 20px;">Microsoft Store</h2>
+            <div class="store-grid" id="store-apps-grid">
+                <!-- Приложения будут загружены через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Блокнот -->
+    <div id="window-notepad" class="window" style="top: 100px; left: 200px; width: 500px; height: 400px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>📝</span>
+                <span>Блокнот</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('notepad')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('notepad')">□</button>
+                <button class="window-btn close" onclick="closeWindow('notepad')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <textarea id="notepad-text" style="width: 100%; height: 100%; border: none; outline: none; resize: none; font-family: monospace; font-size: 14px; padding: 10px;" placeholder="Начните печатать..."></textarea>
+        </div>
+    </div>
+
+    <!-- Калькулятор -->
+    <div id="window-calculator" class="window" style="top: 150px; left: 300px; width: 320px; height: 450px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🧮</span>
+                <span>Калькулятор</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('calculator')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('calculator')">□</button>
+                <button class="window-btn close" onclick="closeWindow('calculator')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="calculator">
+                <div class="calculator-display" id="calc-display">0</div>
+                <div class="calculator-buttons" id="calc-buttons"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paint -->
+    <div id="window-paint" class="window" style="top: 100px; left: 400px; width: 700px; height: 500px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🎨</span>
+                <span>Paint</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('paint')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('paint')">□</button>
+                <button class="window-btn close" onclick="closeWindow('paint')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="paint-container">
+                <div class="paint-tools">
+                    <div class="paint-tool active" data-tool="brush" title="Кисть">✏️</div>
+                    <div class="paint-tool" data-tool="line" title="Линия">📏</div>
+                    <div class="paint-tool" data-tool="rectangle" title="Прямоугольник">⬜</div>
+                    <div class="paint-tool" data-tool="circle" title="Круг">⭕</div>
+                    <div class="paint-tool" data-tool="eraser" title="Ластик">🧽</div>
+                </div>
+                <div class="paint-canvas-container">
+                    <canvas id="paint-canvas" width="600" height="400" class="paint-canvas"></canvas>
+                    <div class="paint-colors">
+                        <div class="paint-color" style="background: #000;" data-color="#000"></div>
+                        <div class="paint-color" style="background: #f00;" data-color="#f00"></div>
+                        <div class="paint-color" style="background: #0f0;" data-color="#0f0"></div>
+                        <div class="paint-color" style="background: #00f;" data-color="#00f"></div>
+                        <div class="paint-color" style="background: #ff0;" data-color="#ff0"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Block Blast -->
+    <div id="window-blockblast" class="window" style="top: 80px; left: 250px; width: 500px; height: 600px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>💥</span>
+                <span>Block Blast</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('blockblast')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('blockblast')">□</button>
+                <button class="window-btn close" onclick="closeWindow('blockblast')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Block Blast</h2>
+                <div class="game-info">
+                    <div class="game-stats">
+                        <div class="game-stat" id="bb-score">Счёт: 0</div>
+                        <div class="game-stat" id="bb-moves">Ходы: 50</div>
+                        <div class="game-stat" id="bb-level">Уровень: 1</div>
+                    </div>
+                    <button class="game-button" onclick="startBlockBlast()">Новая игра</button>
+                </div>
+                <div class="block-blast-board" id="bb-board"></div>
+                <div style="margin-top: 20px;">
+                    <p style="color: #666;">Выбирайте группы одинаковых блоков для их уничтожения</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Сапёр -->
+    <div id="window-minesweeper" class="window" style="top: 120px; left: 350px; width: 450px; height: 550px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>💣</span>
+                <span>Сапёр</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('minesweeper')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('minesweeper')">□</button>
+                <button class="window-btn close" onclick="closeWindow('minesweeper')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Сапёр</h2>
+                <div class="game-info">
+                    <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px;">
+                            Мины: <span id="ms-mines">10</span>
+                        </div>
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px;">
+                            Время: <span id="ms-time">0</span>
+                        </div>
+                    </div>
+                    <button class="game-button" onclick="startMinesweeper()">Новая игра</button>
+                    <div style="margin-top: 10px;">
+                        <label style="color: #666;">Сложность: </label>
+                        <select id="ms-difficulty" style="padding: 5px;">
+                            <option value="easy">Легкая (8x8, 10 мин)</option>
+                            <option value="medium" selected>Средняя (10x10, 15 мин)</option>
+                            <option value="hard">Сложная (12x12, 20 мин)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ms-board" style="margin: 20px auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Змейка -->
+    <div id="window-snake" class="window" style="top: 100px; left: 200px; width: 500px; height: 550px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🐍</span>
+                <span>Змейка</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('snake')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('snake')">□</button>
+                <button class="window-btn close" onclick="closeWindow('snake')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Змейка</h2>
+                <div class="game-info">
+                    <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px;">
+                            Счёт: <span id="snake-score">0</span>
+                        </div>
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px;">
+                            Рекорд: <span id="snake-highscore">0</span>
+                        </div>
+                    </div>
+                    <button class="game-button" onclick="startSnake()">Начать игру</button>
+                    <button class="game-button" onclick="pauseSnake()">Пауза</button>
+                </div>
+                <canvas id="snake-canvas" width="400" height="400" style="border: 2px solid #333; background: #000; margin: 20px auto; display: block;"></canvas>
+                <div style="color: #666; text-align: center;">
+                    <p>Управление: Стрелки ←↑→↓</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Тетрис -->
+    <div id="window-tetris" class="window" style="top: 80px; left: 300px; width: 450px; height: 650px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🧊</span>
+                <span>Тетрис</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('tetris')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('tetris')">□</button>
+                <button class="window-btn close" onclick="closeWindow('tetris')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Тетрис</h2>
+                <div style="display: flex; gap: 20px; justify-content: center; margin: 20px 0;">
+                    <div style="text-align: center;">
+                        <div style="background: #0078d7; color: white; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                            Счёт: <span id="tetris-score">0</span>
+                        </div>
+                        <div style="background: #0078d7; color: white; padding: 10px; border-radius: 5px;">
+                            Уровень: <span id="tetris-level">1</span>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="background: #0078d7; color: white; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                            Следующая:
+                        </div>
+                        <canvas id="tetris-next" width="80" height="80" style="background: #f0f0f0;"></canvas>
+                    </div>
+                </div>
+                <button class="game-button" onclick="startTetris()">Начать игру</button>
+                <button class="game-button" onclick="pauseTetris()">Пауза</button>
+                <canvas id="tetris-canvas" width="300" height="500" style="border: 2px solid #333; background: #000; margin: 20px auto; display: block;"></canvas>
+                <div style="color: #666; text-align: center;">
+                    <p>Управление: ←→ - движение, ↑ - поворот, ↓ - ускорить, Пробел - сбросить</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Косынка -->
+    <div id="window-solitaire" class="window" style="top: 50px; left: 150px; width: 800px; height: 600px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🃏</span>
+                <span>Косынка</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('solitaire')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('solitaire')">□</button>
+                <button class="window-btn close" onclick="closeWindow('solitaire')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Косынка</h2>
+                <div style="display: flex; justify-content: space-between; margin: 20px 0;">
+                    <div>
+                        <button class="game-button" onclick="startSolitaire()">Новая игра</button>
+                        <div style="margin-top: 10px; color: #666;">
+                            Ходы: <span id="solitaire-moves">0</span> | Время: <span id="solitaire-time">0</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px;">
+                            Колода: <span id="solitaire-deck">24</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="solitaire-board" style="background: #008000; padding: 20px; border-radius: 10px; min-height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Музыкальный плеер -->
+    <div id="window-music" class="window" style="top: 100px; left: 200px; width: 400px; height: 500px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🎵</span>
+                <span>Музыкальный плеер</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('music')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('music')">□</button>
+                <button class="window-btn close" onclick="closeWindow('music')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="music-player">
+                <div class="album-art">
+                    🎵
+                </div>
+                <div class="player-controls">
+                    <div class="song-info">
+                        <div class="song-title" id="current-song">Музыка Windows</div>
+                        <div class="song-artist" id="current-artist">Windows Media</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="music-progress"></div>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="control-btn" onclick="prevSong()">⏮</button>
+                        <button class="control-btn play" onclick="togglePlay()">▶️</button>
+                        <button class="control-btn" onclick="nextSong()">⏭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Браузер -->
+    <div id="window-browser" class="window" style="top: 50px; left: 100px; width: 900px; height: 700px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🌐</span>
+                <span>Браузер Windows</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('browser')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('browser')">□</button>
+                <button class="window-btn close" onclick="closeWindow('browser')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="browser-container">
+                <div class="browser-navbar">
+                    <button class="browser-nav-btn" onclick="browserGoBack()">←</button>
+                    <button class="browser-nav-btn" onclick="browserGoForward()">→</button>
+                    <button class="browser-nav-btn" onclick="browserRefresh()">🔄</button>
+                    <input type="text" class="browser-url-bar" id="browser-url" value="https://www.microsoft.com" onkeypress="if(event.key === 'Enter') navigateToUrl()">
+                    <button class="browser-nav-btn" onclick="navigateToUrl()">Перейти</button>
+                </div>
+                <div class="browser-content" id="browser-content">
+                    <div class="webpage">
+                        <h1>Добро пожаловать в браузер Windows!</h1>
+                        <p>Введите адрес сайта в строку выше и нажмите Enter.</p>
+                        <div style="margin-top: 30px;">
+                            <h3>Быстрые ссылки:</h3>
+                            <button class="game-button" onclick="loadWebPage('https://www.microsoft.com')">Microsoft</button>
+                            <button class="game-button" onclick="loadWebPage('https://www.google.com')">Google</button>
+                            <button class="game-button" onclick="loadWebPage('https://www.youtube.com')">YouTube</button>
+                            <button class="game-button" onclick="loadWebPage('https://www.wikipedia.org')">Wikipedia</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Проводник -->
+    <div id="window-explorer" class="window" style="top: 100px; left: 200px; width: 600px; height: 400px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>📁</span>
+                <span id="explorer-title">Проводник</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('explorer')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('explorer')">□</button>
+                <button class="window-btn close" onclick="closeWindow('explorer')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="display: flex; height: 100%;">
+                <div style="width: 200px; background: #f5f5f5; padding: 10px; border-right: 1px solid #ddd;">
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('desktop')">🏠 Рабочий стол</div>
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('documents')">📄 Документы</div>
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('pictures')">🖼️ Изображения</div>
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('music')">🎵 Музыка</div>
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('videos')">🎬 Видео</div>
+                    <div style="padding: 10px; cursor: pointer;" onclick="explorerNavigate('computer')">🖥️ Этот компьютер</div>
+                </div>
+                <div style="flex: 1; padding: 20px;" id="explorer-content">
+                    <!-- Содержимое будет загружено динамически -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Заставка -->
+    <div id="screensaver">
+        <div class="screensaver-logo" id="screensaver-logo">Windows</div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let currentWindowsVersion = 10;
+        let idleTimer = null;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+        let openWindows = new Set();
+        let notificationCount = 0;
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Система Windows Simulator загружена');
+            
+            // Показываем BIOS экран на 2 секунды
+            setTimeout(() => {
+                document.getElementById('bios-screen').style.display = 'none';
+                document.getElementById('windows-selector').style.display = 'flex';
+            }, 2000);
+            
+            // Добавляем обработчик клавиш для BIOS
+            document.addEventListener('keydown', skipBios);
+            document.addEventListener('click', skipBios);
+        });
+
+        function skipBios() {
+            document.getElementById('bios-screen').style.display = 'none';
+            document.getElementById('windows-selector').style.display = 'flex';
+            document.removeEventListener('keydown', skipBios);
+            document.removeEventListener('click', skipBios);
+        }
+
+        // Выбор версии Windows
+        function selectWindowsVersion(version) {
+            currentWindowsVersion = version;
+            
+            document.getElementById('windows-selector').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'flex';
+            
+            // Устанавливаем логотип загрузки
+            const logos = {
+                7: 'Windows 7',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            document.getElementById('loading-logo').textContent = logos[version] || 'Windows';
+            
+            // Запускаем процесс загрузки
+            simulateBootProcess();
+        }
+
+        // Симуляция процесса загрузки
+        function simulateBootProcess() {
+            const loadingBar = document.getElementById('loading-bar');
+            const loadingText = document.getElementById('loading-text');
+            const steps = [
+                { progress: 10, text: 'Загрузка файлов Windows...' },
+                { progress: 25, text: 'Подготовка устройств...' },
+                { progress: 40, text: 'Загрузка драйверов...' },
+                { progress: 60, text: 'Инициализация системы...' },
+                { progress: 80, text: 'Подготовка рабочего стола...' },
+                { progress: 100, text: 'Добро пожаловать!' }
+            ];
+
+            let currentStep = 0;
+            
+            function nextStep() {
+                if (currentStep >= steps.length) {
+                    // Загрузка завершена
+                    setTimeout(() => {
+                        initializeDesktop();
+                    }, 500);
+                    return;
+                }
+                
+                const step = steps[currentStep];
+                loadingBar.style.width = step.progress + '%';
+                loadingText.textContent = step.text;
+                currentStep++;
+                
+                setTimeout(nextStep, 800);
+            }
+            
+            nextStep();
+        }
+
+        // Инициализация рабочего стола
+        function initializeDesktop() {
+            document.getElementById('loading-screen').style.display = 'none';
+            
+            const desktop = document.getElementById('desktop');
+            desktop.style.display = 'block';
+            
+            // Устанавливаем фон в зависимости от версии Windows
+            const bgClasses = ['win7-bg', 'win8-bg', 'win9-bg', 'win10-bg', 'win11-bg'];
+            desktop.classList.remove(...bgClasses);
+            desktop.classList.add(`win${currentWindowsVersion}-bg`);
+            
+            // Обновляем кнопку Пуск
+            const startButton = document.getElementById('start-button');
+            const startClasses = ['win7-start', 'win8-start', 'win9-start', 'win10-start', 'win11-start'];
+            startButton.classList.remove(...startClasses);
+            startButton.classList.add(`win${currentWindowsVersion}-start`);
+            
+            // Добавляем иконки на рабочий стол
+            populateDesktopIcons();
+            
+            // Инициализируем системные часы
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Инициализируем окна
+            initializeWindows();
+            
+            // Инициализируем Microsoft Store
+            initializeMicrosoftStore();
+            
+            // Инициализируем калькулятор
+            initializeCalculator();
+            
+            // Инициализируем Paint
+            initializePaint();
+            
+            // Инициализируем игры
+            initializeGames();
+            
+            // Инициализируем музыкальный плеер
+            initializeMusicPlayer();
+            
+            // Запускаем таймер для заставки
+            startIdleTimer();
+            
+            // Показать приветственное уведомление
+            setTimeout(() => {
+                showNotification('Система', 'Windows успешно загружена!');
+            }, 1000);
+        }
+
+        // Заполняем иконки на рабочем столе
+        function populateDesktopIcons() {
+            const desktopIcons = document.getElementById('desktop-icons');
+            
+            const icons = [
+                { icon: '🛒', name: 'Microsoft Store', action: () => openWindow('store') },
+                { icon: '🖥️', name: 'Этот компьютер', action: () => openWindow('explorer', 'computer') },
+                { icon: '📁', name: 'Документы', action: () => openWindow('explorer', 'documents') },
+                { icon: '🌐', name: 'Браузер', action: () => openWindow('browser') },
+                { icon: '📝', name: 'Блокнот', action: () => openWindow('notepad') },
+                { icon: '🧮', name: 'Калькулятор', action: () => openWindow('calculator') },
+                { icon: '🎮', name: 'Игры', action: () => showGamesMenu() },
+                { icon: '🎵', name: 'Музыка', action: () => openWindow('music') },
+                { icon: '🎨', name: 'Paint', action: () => openWindow('paint') }
+            ];
+            
+            desktopIcons.innerHTML = '';
+            
+            icons.forEach(iconData => {
+                const icon = document.createElement('div');
+                icon.className = 'desktop-icon';
+                icon.innerHTML = `
+                    <div class="icon-img">${iconData.icon}</div>
+                    <div>${iconData.name}</div>
+                `;
+                icon.onclick = iconData.action;
+                desktopIcons.appendChild(icon);
+            });
+        }
+
+        // Показать меню игр
+        function showGamesMenu() {
+            const games = [
+                { name: 'Block Blast', icon: '💥', action: () => openWindow('blockblast') },
+                { name: 'Сапёр', icon: '💣', action: () => openWindow('minesweeper') },
+                { name: 'Змейка', icon: '🐍', action: () => openWindow('snake') },
+                { name: 'Тетрис', icon: '🧊', action: () => openWindow('tetris') },
+                { name: 'Косынка', icon: '🃏', action: () => openWindow('solitaire') }
+            ];
+            
+            let menuHtml = '<div style="position: absolute; background: white; border: 1px solid #ccc; border-radius: 5px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">';
+            games.forEach(game => {
+                menuHtml += `<div style="padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px;" onclick="${game.action.toString().replace('() => ', '')}">
+                    <span>${game.icon}</span>
+                    <span>${game.name}</span>
+                </div>`;
+            });
+            menuHtml += '</div>';
+            
+            const menu = document.createElement('div');
+            menu.innerHTML = menuHtml;
+            menu.style.position = 'absolute';
+            menu.style.top = '150px';
+            menu.style.left = '100px';
+            menu.style.zIndex = '1000';
+            
+            document.body.appendChild(menu);
+            
+            // Закрыть меню при клике вне его
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 100);
+        }
+
+        // Инициализация окон
+        function initializeWindows() {
+            // Добавляем функционал перетаскивания для всех окон
+            document.querySelectorAll('.window-header').forEach(header => {
+                header.addEventListener('mousedown', function(e) {
+                    if (e.target.classList.contains('window-btn')) return;
+                    
+                    draggedWindow = this.parentElement;
+                    const rect = draggedWindow.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    
+                    // Поднимаем окно поверх других
+                    document.querySelectorAll('.window').forEach(w => {
+                        w.style.zIndex = '100';
+                    });
+                    draggedWindow.style.zIndex = '1000';
+                });
+            });
+            
+            // Обработка движения мыши
+            document.addEventListener('mousemove', function(e) {
+                if (draggedWindow) {
+                    e.preventDefault();
+                    const x = e.clientX - dragOffset.x;
+                    const y = e.clientY - dragOffset.y;
+                    
+                    // Проверяем границы экрана
+                    const maxX = window.innerWidth - draggedWindow.offsetWidth;
+                    const maxY = window.innerHeight - 40 - draggedWindow.offsetHeight;
+                    
+                    draggedWindow.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+                    draggedWindow.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+                }
+            });
+            
+            // Отпускание мыши
+            document.addEventListener('mouseup', function() {
+                draggedWindow = null;
+            });
+        }
+
+        // Открытие окна
+        function openWindow(windowId, param) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (!windowElement) {
+                console.error('Окно не найдено:', windowId);
+                return;
+            }
+            
+            // Показываем окно
+            windowElement.classList.add('active');
+            windowElement.style.display = 'block';
+            
+            // Поднимаем поверх других окон
+            document.querySelectorAll('.window').forEach(w => {
+                w.style.zIndex = '100';
+            });
+            windowElement.style.zIndex = '1000';
+            
+            // Добавляем в список открытых окон
+            openWindows.add(windowId);
+            updateTaskbar();
+            
+            // Инициализируем содержимое если нужно
+            if (windowId === 'explorer' && param) {
+                explorerNavigate(param);
+            }
+            
+            // Запускаем игру если нужно
+            if (windowId === 'blockblast') {
+                setTimeout(() => startBlockBlast(), 100);
+            } else if (windowId === 'minesweeper') {
+                setTimeout(() => startMinesweeper(), 100);
+            } else if (windowId === 'snake') {
+                setTimeout(() => startSnake(), 100);
+            } else if (windowId === 'tetris') {
+                setTimeout(() => startTetris(), 100);
+            } else if (windowId === 'solitaire') {
+                setTimeout(() => startSolitaire(), 100);
+            }
+            
+            return windowElement;
+        }
+
+        // Закрытие окна
+        function closeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                windowElement.classList.remove('active');
+                openWindows.delete(windowId);
+                updateTaskbar();
+            }
+        }
+
+        // Сворачивание окна
+        function minimizeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                windowElement.style.display = 'none';
+            }
+        }
+
+        // Разворачивание окна
+        function maximizeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                if (windowElement.style.width === '100%') {
+                    // Возвращаем нормальный размер
+                    windowElement.style.width = '';
+                    windowElement.style.height = '';
+                    windowElement.style.top = '';
+                    windowElement.style.left = '';
+                } else {
+                    // Разворачиваем на весь экран
+                    windowElement.style.width = '100%';
+                    windowElement.style.height = 'calc(100% - 40px)';
+                    windowElement.style.top = '0';
+                    windowElement.style.left = '0';
+                }
+            }
+        }
+
+        // Навигация в проводнике
+        function explorerNavigate(folder) {
+            const explorerContent = document.getElementById('explorer-content');
+            const title = document.getElementById('explorer-title');
+            
+            // Данные для разных папок
+            const folderData = {
+                desktop: {
+                    name: 'Рабочий стол',
+                    files: [
+                        { name: 'Этот компьютер', icon: '🖥️', type: 'system' },
+                        { name: 'Microsoft Store', icon: '🛒', type: 'app' },
+                        { name: 'Корзина', icon: '🗑️', type: 'system' },
+                        { name: 'Документы', icon: '📁', type: 'folder' }
+                    ]
+                },
+                documents: {
+                    name: 'Документы',
+                    files: [
+                        { name: 'Отчет.docx', icon: '📄', type: 'document', size: '245 KB' },
+                        { name: 'Презентация.pptx', icon: '📊', type: 'document', size: '1.2 MB' },
+                        { name: 'Бюджет.xlsx', icon: '📈', type: 'document', size: '356 KB' },
+                        { name: 'Заметки.txt', icon: '📝', type: 'document', size: '12 KB' }
+                    ]
+                },
+                pictures: {
+                    name: 'Изображения',
+                    files: [
+                        { name: 'Обои.jpg', icon: '🖼️', type: 'image', size: '3.4 MB' },
+                        { name: 'Фото1.png', icon: '📷', type: 'image', size: '2.1 MB' },
+                        { name: 'Скриншот.bmp', icon: '💻', type: 'image', size: '4.5 MB' }
+                    ]
+                },
+                music: {
+                    name: 'Музыка',
+                    files: [
+                        { name: 'Песня1.mp3', icon: '🎵', type: 'audio', size: '5.2 MB' },
+                        { name: 'Песня2.wav', icon: '🎶', type: 'audio', size: '12.3 MB' },
+                        { name: 'Подкаст.mp3', icon: '🎙️', type: 'audio', size: '8.7 MB' }
+                    ]
+                },
+                videos: {
+                    name: 'Видео',
+                    files: [
+                        { name: 'Фильм.mp4', icon: '🎬', type: 'video', size: '1.2 GB' },
+                        { name: 'Клип.avi', icon: '📹', type: 'video', size: '245 MB' },
+                        { name: 'Запись.mkv', icon: '🎥', type: 'video', size: '890 MB' }
+                    ]
+                },
+                computer: {
+                    name: 'Этот компьютер',
+                    files: [
+                        { name: 'Локальный диск (C:)', icon: '💾', type: 'drive', size: '238 GB свободно из 500 GB' },
+                        { name: 'Локальный диск (D:)', icon: '💽', type: 'drive', size: '1.2 TB свободно из 2 TB' },
+                        { name: 'DVD-привод (E:)', icon: '💿', type: 'drive', size: 'Нет диска' }
+                    ]
+                }
+            };
+            
+            const data = folderData[folder] || folderData.desktop;
+            title.textContent = data.name;
+            
+            // Генерируем содержимое
+            explorerContent.innerHTML = `
+                <h3 style="color: #333; margin-bottom: 20px;">${data.name}</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px;">
+                    ${data.files.map(file => `
+                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer;" 
+                             onclick="openFile('${file.name}', '${file.type}')">
+                            <div style="font-size: 24px; margin-bottom: 10px;">${file.icon}</div>
+                            <div style="font-size: 12px; color: #333; margin-bottom: 5px;">${file.name}</div>
+                            ${file.size ? `<div style="font-size: 10px; color: #666;">${file.size}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Открытие файла
+        function openFile(filename, type) {
+            if (type === 'app') {
+                if (filename.includes('Microsoft Store')) {
+                    openWindow('store');
+                }
+            } else if (type === 'document') {
+                openWindow('notepad');
+                document.getElementById('notepad-text').value = `Файл: ${filename}\n\nСодержимое файла...`;
+            } else {
+                showMessage(`Открыт файл: ${filename}`);
+            }
+        }
+
+        // Инициализация Microsoft Store
+        function initializeMicrosoftStore() {
+            const storeAppsGrid = document.getElementById('store-apps-grid');
+            
+            const storeApps = [
+                { id: 'blockblast', icon: '💥', title: 'Block Blast', desc: 'Аркадная игра с блоками', action: () => openWindow('blockblast') },
+                { id: 'minesweeper', icon: '💣', title: 'Сапёр', desc: 'Классическая игра с минами', action: () => openWindow('minesweeper') },
+                { id: 'snake', icon: '🐍', title: 'Змейка', desc: 'Классическая игра "Змейка"', action: () => openWindow('snake') },
+                { id: 'tetris', icon: '🧊', title: 'Тетрис', desc: 'Культовая игра с падающими фигурами', action: () => openWindow('tetris') },
+                { id: 'solitaire', icon: '🃏', title: 'Косынка', desc: 'Карточная игра "Косынка"', action: () => openWindow('solitaire') },
+                { id: 'notepad', icon: '📝', title: 'Блокнот', desc: 'Текстовый редактор', action: () => openWindow('notepad') },
+                { id: 'calculator', icon: '🧮', title: 'Калькулятор', desc: 'Научный калькулятор', action: () => openWindow('calculator') },
+                { id: 'paint', icon: '🎨', title: 'Paint', desc: 'Графический редактор', action: () => openWindow('paint') },
+                { id: 'music', icon: '🎵', title: 'Музыка', desc: 'Музыкальный плеер', action: () => openWindow('music') },
+                { id: 'browser', icon: '🌐', title: 'Браузер', desc: 'Веб-браузер', action: () => openWindow('browser') }
+            ];
+            
+            storeAppsGrid.innerHTML = storeApps.map(app => `
+                <div class="store-app" onclick="${app.action.toString().replace('() => ', '')}">
+                    <div class="store-app-icon">${app.icon}</div>
+                    <div class="store-app-title">${app.title}</div>
+                    <div class="store-app-desc">${app.desc}</div>
+                    <button style="padding: 5px 15px; background: #0078d7; color: white; border: none; border-radius: 3px; cursor: pointer;">Установить</button>
+                </div>
+            `).join('');
+        }
+
+        // Инициализация калькулятора
+        function initializeCalculator() {
+            const calcButtons = document.getElementById('calc-buttons');
+            const buttons = [
+                ['C', 'CE', '←', '/'],
+                ['7', '8', '9', '*'],
+                ['4', '5', '6', '-'],
+                ['1', '2', '3', '+'],
+                ['0', '.', '=', '=']
+            ];
+            
+            let html = '';
+            buttons.forEach(row => {
+                row.forEach(btn => {
+                    const className = btn === '=' ? 'calc-btn equals' : 
+                                   ['+', '-', '*', '/'].includes(btn) ? 'calc-btn operator' : 'calc-btn';
+                    html += `<button class="${className}" onclick="calcButtonClick('${btn}')">${btn}</button>`;
+                });
+            });
+            calcButtons.innerHTML = html;
+        }
+
+        let calcValue = '0';
+        let calcOperation = null;
+        let calcPreviousValue = null;
+
+        function calcButtonClick(value) {
+            const display = document.getElementById('calc-display');
+            
+            if (value === 'C') {
+                calcValue = '0';
+                calcOperation = null;
+                calcPreviousValue = null;
+            } else if (value === 'CE') {
+                calcValue = '0';
+            } else if (value === '←') {
+                calcValue = calcValue.length > 1 ? calcValue.slice(0, -1) : '0';
+            } else if (['+', '-', '*', '/'].includes(value)) {
+                if (calcOperation && calcPreviousValue !== null) {
+                    calculate();
+                }
+                calcOperation = value;
+                calcPreviousValue = parseFloat(calcValue);
+                calcValue = '0';
+            } else if (value === '=') {
+                if (calcOperation && calcPreviousValue !== null) {
+                    calculate();
+                    calcOperation = null;
+                    calcPreviousValue = null;
+                }
+            } else if (value === '.') {
+                if (!calcValue.includes('.')) {
+                    calcValue += '.';
+                }
+            } else {
+                if (calcValue === '0') {
+                    calcValue = value;
+                } else {
+                    calcValue += value;
+                }
+            }
+            
+            display.textContent = calcValue;
+        }
+
+        function calculate() {
+            const current = parseFloat(calcValue);
+            const previous = parseFloat(calcPreviousValue);
+            
+            switch(calcOperation) {
+                case '+': calcValue = (previous + current).toString(); break;
+                case '-': calcValue = (previous - current).toString(); break;
+                case '*': calcValue = (previous * current).toString(); break;
+                case '/': calcValue = current !== 0 ? (previous / current).toString() : 'Error'; break;
+            }
+        }
+
+        // Инициализация Paint
+        function initializePaint() {
+            const canvas = document.getElementById('paint-canvas');
+            const ctx = canvas.getContext('2d');
+            let painting = false;
+            let currentTool = 'brush';
+            let currentColor = '#000';
+            
+            // Заполняем фон белым
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Обработчики инструментов
+            document.querySelectorAll('.paint-tool').forEach(tool => {
+                tool.addEventListener('click', function() {
+                    document.querySelectorAll('.paint-tool').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTool = this.dataset.tool;
+                });
+            });
+            
+            // Обработчики цветов
+            document.querySelectorAll('.paint-color').forEach(color => {
+                color.addEventListener('click', function() {
+                    currentColor = this.dataset.color;
+                });
+            });
+            
+            // Обработчики рисования
+            canvas.addEventListener('mousedown', function(e) {
+                painting = true;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (currentTool === 'brush') {
+                    drawBrush(x, y);
+                } else if (currentTool === 'eraser') {
+                    erase(x, y);
+                }
+            });
+            
+            canvas.addEventListener('mousemove', function(e) {
+                if (!painting) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (currentTool === 'brush') {
+                    drawBrush(x, y);
+                } else if (currentTool === 'eraser') {
+                    erase(x, y);
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => painting = false);
+            canvas.addEventListener('mouseleave', () => painting = false);
+            
+            function drawBrush(x, y) {
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = currentColor;
+                ctx.fill();
+            }
+            
+            function erase(x, y) {
+                ctx.beginPath();
+                ctx.arc(x, y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+            }
+        }
+
+        // Инициализация игр
+        function initializeGames() {
+            // Block Blast
+            window.blockBlastGame = {
+                board: [],
+                score: 0,
+                moves: 50,
+                level: 1
+            };
+            
+            // Сапёр
+            window.minesweeperGame = {
+                board: [],
+                revealed: [],
+                gameOver: false,
+                startTime: null
+            };
+            
+            // Змейка
+            window.snakeGame = {
+                canvas: null,
+                ctx: null,
+                snake: [],
+                food: {},
+                direction: 'right',
+                gameLoop: null,
+                score: 0,
+                highScore: 0
+            };
+            
+            // Тетрис
+            window.tetrisGame = {
+                canvas: null,
+                ctx: null,
+                nextCanvas: null,
+                nextCtx: null,
+                board: [],
+                currentPiece: null,
+                nextPiece: null,
+                gameLoop: null,
+                score: 0,
+                level: 1
+            };
+            
+            // Косынка
+            window.solitaireGame = {
+                deck: [],
+                foundations: [[], [], [], []],
+                tableau: [[], [], [], [], [], [], []],
+                waste: [],
+                moves: 0,
+                startTime: null
+            };
+        }
+
+        // Block Blast Game
+        function startBlockBlast() {
+            const boardElement = document.getElementById('bb-board');
+            const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#40C4FF', '#18FFFF'];
+            
+            blockBlastGame.board = [];
+            blockBlastGame.score = 0;
+            blockBlastGame.moves = 50;
+            blockBlastGame.level = 1;
+            
+            // Создаем доску
+            let html = '';
+            for (let i = 0; i < 64; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                blockBlastGame.board.push(color);
+                html += `<div class="block-blast-cell" style="background: ${color};" onclick="blastBlock(${i})"></div>`;
+            }
+            boardElement.innerHTML = html;
+            
+            updateBlockBlastStats();
+        }
+
+        function blastBlock(index) {
+            if (blockBlastGame.moves <= 0) return;
+            
+            const color = blockBlastGame.board[index];
+            const toRemove = [];
+            const visited = new Set();
+            
+            function findGroup(idx) {
+                if (visited.has(idx)) return;
+                visited.add(idx);
+                toRemove.push(idx);
+                
+                const neighbors = [
+                    idx - 8, // вверх
+                    idx + 8, // вниз
+                    idx % 8 !== 0 ? idx - 1 : -1, // влево
+                    idx % 8 !== 7 ? idx + 1 : -1  // вправо
+                ];
+                
+                neighbors.forEach(neighbor => {
+                    if (neighbor >= 0 && neighbor < 64 && blockBlastGame.board[neighbor] === color) {
+                        findGroup(neighbor);
+                    }
+                });
+            }
+            
+            findGroup(index);
+            
+            if (toRemove.length >= 2) {
+                // Удаляем блоки
+                toRemove.forEach(idx => {
+                    blockBlastGame.board[idx] = null;
+                    document.querySelectorAll('.block-blast-cell')[idx].style.background = '#ccc';
+                });
+                
+                // Считаем очки
+                blockBlastGame.score += toRemove.length * 10;
+                blockBlastGame.moves--;
+                
+                // Проверяем уровень
+                if (blockBlastGame.score >= blockBlastGame.level * 100) {
+                    blockBlastGame.level++;
+                    showNotification('Block Blast', `Уровень ${blockBlastGame.level}!`);
+                }
+                
+                updateBlockBlastStats();
+                
+                // Проверяем конец игры
+                if (blockBlastGame.moves === 0) {
+                    setTimeout(() => {
+                        showMessage(`Игра окончена! Ваш счет: ${blockBlastGame.score}`);
+                    }, 500);
+                }
+            }
+        }
+
+        function updateBlockBlastStats() {
+            document.getElementById('bb-score').textContent = `Счёт: ${blockBlastGame.score}`;
+            document.getElementById('bb-moves').textContent = `Ходы: ${blockBlastGame.moves}`;
+            document.getElementById('bb-level').textContent = `Уровень: ${blockBlastGame.level}`;
+        }
+
+        // Сапёр
+        function startMinesweeper() {
+            const boardElement = document.getElementById('ms-board');
+            const difficulty = document.getElementById('ms-difficulty').value;
+            
+            let size, mines;
+            switch(difficulty) {
+                case 'easy': size = 8; mines = 10; break;
+                case 'medium': size = 10; mines = 15; break;
+                case 'hard': size = 12; mines = 20; break;
+            }
+            
+            // Создаем доску
+            window.minesweeperGame.board = Array(size * size).fill(0);
+            window.minesweeperGame.revealed = Array(size * size).fill(false);
+            window.minesweeperGame.gameOver = false;
+            window.minesweeperGame.startTime = Date.now();
+            
+            // Расставляем мины
+            let minesPlaced = 0;
+            while (minesPlaced < mines) {
+                const pos = Math.floor(Math.random() * size * size);
+                if (window.minesweeperGame.board[pos] !== 'M') {
+                    window.minesweeperGame.board[pos] = 'M';
+                    minesPlaced++;
+                    
+                    // Увеличиваем счетчики вокруг мины
+                    const neighbors = [
+                        pos - size - 1, pos - size, pos - size + 1,
+                        pos - 1, pos + 1,
+                        pos + size - 1, pos + size, pos + size + 1
+                    ];
+                    
+                    neighbors.forEach(neighbor => {
+                        if (neighbor >= 0 && neighbor < size * size && 
+                            Math.floor(neighbor / size) === Math.floor(pos / size) ||
+                            Math.abs(neighbor - pos) === 1) {
+                            if (window.minesweeperGame.board[neighbor] !== 'M') {
+                                window.minesweeperGame.board[neighbor]++;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Отображаем доску
+            let html = `<div style="display: grid; grid-template-columns: repeat(${size}, 30px); gap: 2px;">`;
+            for (let i = 0; i < size * size; i++) {
+                html += `<div id="ms-cell-${i}" style="width: 30px; height: 30px; background: #ccc; border: 1px solid #999; display: flex; align-items: center; justify-content: center; cursor: pointer;" 
+                          onclick="revealMine(${i})" oncontextmenu="flagMine(${i}); return false;">?</div>`;
+            }
+            html += '</div>';
+            boardElement.innerHTML = html;
+            
+            // Запускаем таймер
+            updateMinesweeperTimer();
+        }
+
+        function revealMine(index) {
+            if (window.minesweeperGame.gameOver || window.minesweeperGame.revealed[index]) return;
+            
+            window.minesweeperGame.revealed[index] = true;
+            const cell = document.getElementById(`ms-cell-${index}`);
+            const value = window.minesweeperGame.board[index];
+            
+            if (value === 'M') {
+                cell.textContent = '💣';
+                cell.style.background = '#ff5252';
+                window.minesweeperGame.gameOver = true;
+                showMessage('Игра окончена! Вы наступили на мину!');
+            } else {
+                cell.textContent = value || '';
+                cell.style.background = '#fff';
+                
+                if (value === 0) {
+                    // Автоматически открываем соседей
+                    const size = Math.sqrt(window.minesweeperGame.board.length);
+                    const neighbors = [
+                        index - size - 1, index - size, index - size + 1,
+                        index - 1, index + 1,
+                        index + size - 1, index + size, index + size + 1
+                    ];
+                    
+                    neighbors.forEach(neighbor => {
+                        if (neighbor >= 0 && neighbor < size * size) {
+                            setTimeout(() => revealMine(neighbor), 10);
+                        }
+                    });
+                }
+                
+                // Проверяем победу
+                const totalCells = window.minesweeperGame.board.length;
+                const minesCount = window.minesweeperGame.board.filter(cell => cell === 'M').length;
+                const revealedCount = window.minesweeperGame.revealed.filter(r => r).length;
+                
+                if (revealedCount === totalCells - minesCount) {
+                    window.minesweeperGame.gameOver = true;
+                    const time = Math.floor((Date.now() - window.minesweeperGame.startTime) / 1000);
+                    showMessage(`Победа! Вы нашли все мины за ${time} секунд!`);
+                }
+            }
+        }
+
+        function flagMine(index) {
+            if (window.minesweeperGame.gameOver || window.minesweeperGame.revealed[index]) return;
+            
+            const cell = document.getElementById(`ms-cell-${index}`);
+            if (cell.textContent === '🚩') {
+                cell.textContent = '?';
+            } else {
+                cell.textContent = '🚩';
+            }
+        }
+
+        function updateMinesweeperTimer() {
+            if (!window.minesweeperGame.gameOver && window.minesweeperGame.startTime) {
+                const time = Math.floor((Date.now() - window.minesweeperGame.startTime) / 1000);
+                document.getElementById('ms-time').textContent = time;
+                setTimeout(updateMinesweeperTimer, 1000);
+            }
+        }
+
+        // Змейка
+        function startSnake() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            window.snakeGame.canvas = canvas;
+            window.snakeGame.ctx = ctx;
+            window.snakeGame.snake = [{x: 10, y: 10}];
+            window.snakeGame.direction = 'right';
+            window.snakeGame.score = 0;
+            
+            // Создаем еду
+            spawnFood();
+            
+            // Очищаем предыдущий игровой цикл
+            if (window.snakeGame.gameLoop) {
+                clearInterval(window.snakeGame.gameLoop);
+            }
+            
+            // Запускаем игровой цикл
+            window.snakeGame.gameLoop = setInterval(gameLoopSnake, 100);
+            
+            // Управление с клавиатуры
+            document.addEventListener('keydown', handleSnakeKey);
+        }
+
+        function gameLoopSnake() {
+            const ctx = window.snakeGame.ctx;
+            const canvas = window.snakeGame.canvas;
+            const snake = window.snakeGame.snake;
+            
+            // Очищаем canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Двигаем змейку
+            const head = {...snake[0]};
+            switch(window.snakeGame.direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+            
+            // Проверяем столкновение со стенами
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                gameOverSnake();
+                return;
+            }
+            
+            // Проверяем столкновение с собой
+            for (let segment of snake) {
+                if (segment.x === head.x && segment.y === head.y) {
+                    gameOverSnake();
+                    return;
+                }
+            }
+            
+            // Добавляем новую голову
+            snake.unshift(head);
+            
+            // Проверяем съела ли змейка еду
+            if (head.x === window.snakeGame.food.x && head.y === window.snakeGame.food.y) {
+                window.snakeGame.score += 10;
+                spawnFood();
+            } else {
+                // Удаляем хвост если не съела
+                snake.pop();
+            }
+            
+            // Рисуем змейку
+            ctx.fillStyle = '#00ff00';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+            });
+            
+            // Рисуем еду
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(window.snakeGame.food.x * 20, window.snakeGame.food.y * 20, 18, 18);
+            
+            // Обновляем счет
+            document.getElementById('snake-score').textContent = window.snakeGame.score;
+            if (window.snakeGame.score > window.snakeGame.highScore) {
+                window.snakeGame.highScore = window.snakeGame.score;
+                document.getElementById('snake-highscore').textContent = window.snakeGame.highScore;
+            }
+        }
+
+        function spawnFood() {
+            window.snakeGame.food = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 20)
+            };
+        }
+
+        function handleSnakeKey(e) {
+            switch(e.key) {
+                case 'ArrowUp': if (window.snakeGame.direction !== 'down') window.snakeGame.direction = 'up'; break;
+                case 'ArrowDown': if (window.snakeGame.direction !== 'up') window.snakeGame.direction = 'down'; break;
+                case 'ArrowLeft': if (window.snakeGame.direction !== 'right') window.snakeGame.direction = 'left'; break;
+                case 'ArrowRight': if (window.snakeGame.direction !== 'left') window.snakeGame.direction = 'right'; break;
+            }
+        }
+
+        function gameOverSnake() {
+            clearInterval(window.snakeGame.gameLoop);
+            showMessage(`Игра окончена! Счет: ${window.snakeGame.score}`);
+        }
+
+        function pauseSnake() {
+            if (window.snakeGame.gameLoop) {
+                clearInterval(window.snakeGame.gameLoop);
+                window.snakeGame.gameLoop = null;
+                showMessage('Игра на паузе');
+            } else {
+                window.snakeGame.gameLoop = setInterval(gameLoopSnake, 100);
+            }
+        }
+
+        // Тетрис
+        function startTetris() {
+            const canvas = document.getElementById('tetris-canvas');
+            const nextCanvas = document.getElementById('tetris-next');
+            const ctx = canvas.getContext('2d');
+            const nextCtx = nextCanvas.getContext('2d');
+            
+            window.tetrisGame.canvas = canvas;
+            window.tetrisGame.ctx = ctx;
+            window.tetrisGame.nextCanvas = nextCanvas;
+            window.tetrisGame.nextCtx = nextCtx;
+            window.tetrisGame.board = Array(20).fill().map(() => Array(10).fill(0));
+            window.tetrisGame.score = 0;
+            window.tetrisGame.level = 1;
+            
+            // Создаем новую фигуру
+            spawnTetrisPiece();
+            
+            // Очищаем предыдущий игровой цикл
+            if (window.tetrisGame.gameLoop) {
+                clearInterval(window.tetrisGame.gameLoop);
+            }
+            
+            // Запускаем игровой цикл
+            window.tetrisGame.gameLoop = setInterval(gameLoopTetris, 500);
+            
+            // Управление с клавиатуры
+            document.addEventListener('keydown', handleTetrisKey);
+            
+            updateTetrisStats();
+        }
+
+        function spawnTetrisPiece() {
+            const pieces = [
+                [[1,1,1,1]], // I
+                [[1,1],[1,1]], // O
+                [[1,1,1],[0,1,0]], // T
+                [[1,1,1],[1,0,0]], // J
+                [[1,1,1],[0,0,1]], // L
+                [[0,1,1],[1,1,0]], // S
+                [[1,1,0],[0,1,1]]  // Z
+            ];
+            
+            if (!window.tetrisGame.nextPiece) {
+                window.tetrisGame.nextPiece = pieces[Math.floor(Math.random() * pieces.length)];
+            }
+            
+            window.tetrisGame.currentPiece = window.tetrisGame.nextPiece;
+            window.tetrisGame.nextPiece = pieces[Math.floor(Math.random() * pieces.length)];
+            window.tetrisGame.piecePosition = {x: 3, y: 0};
+            
+            // Рисуем следующую фигуру
+            drawNextPiece();
+        }
+
+        function gameLoopTetris() {
+            const ctx = window.tetrisGame.ctx;
+            const canvas = window.tetrisGame.canvas;
+            const board = window.tetrisGame.board;
+            
+            // Очищаем canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Двигаем фигуру вниз
+            if (!movePiece(0, 1)) {
+                // Фигура достигла дна
+                lockPiece();
+                clearLines();
+                spawnTetrisPiece();
+                
+                // Проверяем проигрыш
+                if (checkCollision(window.tetrisGame.piecePosition.x, window.tetrisGame.piecePosition.y)) {
+                    gameOverTetris();
+                    return;
+                }
+            }
+            
+            // Рисуем доску
+            drawBoard();
+            
+            // Рисуем текущую фигуру
+            drawPiece();
+        }
+
+        function drawBoard() {
+            const ctx = window.tetrisGame.ctx;
+            const board = window.tetrisGame.board;
+            const colors = ['', '#FF5252', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800'];
+            
+            for (let y = 0; y < 20; y++) {
+                for (let x = 0; x < 10; x++) {
+                    if (board[y][x]) {
+                        ctx.fillStyle = colors[board[y][x]];
+                        ctx.fillRect(x * 30, y * 25, 28, 23);
+                        ctx.strokeStyle = '#333';
+                        ctx.strokeRect(x * 30, y * 25, 28, 23);
+                    }
+                }
+            }
+        }
+
+        function drawPiece() {
+            const ctx = window.tetrisGame.ctx;
+            const piece = window.tetrisGame.currentPiece;
+            const pos = window.tetrisGame.piecePosition;
+            
+            ctx.fillStyle = '#FF5252';
+            for (let y = 0; y < piece.length; y++) {
+                for (let x = 0; x < piece[y].length; x++) {
+                    if (piece[y][x]) {
+                        ctx.fillRect((pos.x + x) * 30, (pos.y + y) * 25, 28, 23);
+                        ctx.strokeStyle = '#333';
+                        ctx.strokeRect((pos.x + x) * 30, (pos.y + y) * 25, 28, 23);
+                    }
+                }
+            }
+        }
+
+        function drawNextPiece() {
+            const ctx = window.tetrisGame.nextCtx;
+            const piece = window.tetrisGame.nextPiece;
+            
+            ctx.clearRect(0, 0, 80, 80);
+            ctx.fillStyle = '#2196F3';
+            
+            const offsetX = (4 - piece[0].length) * 10;
+            const offsetY = (4 - piece.length) * 10;
+            
+            for (let y = 0; y < piece.length; y++) {
+                for (let x = 0; x < piece[y].length; x++) {
+                    if (piece[y][x]) {
+                        ctx.fillRect(offsetX + x * 20, offsetY + y * 20, 18, 18);
+                    }
+                }
+            }
+        }
+
+        function movePiece(dx, dy) {
+            const newX = window.tetrisGame.piecePosition.x + dx;
+            const newY = window.tetrisGame.piecePosition.y + dy;
+            
+            if (!checkCollision(newX, newY)) {
+                window.tetrisGame.piecePosition.x = newX;
+                window.tetrisGame.piecePosition.y = newY;
+                return true;
+            }
+            return false;
+        }
+
+        function rotatePiece() {
+            const piece = window.tetrisGame.currentPiece;
+            const rotated = piece[0].map((_, i) => piece.map(row => row[i]).reverse());
+            
+            const oldPiece = window.tetrisGame.currentPiece;
+            window.tetrisGame.currentPiece = rotated;
+            
+            if (checkCollision(window.tetrisGame.piecePosition.x, window.tetrisGame.piecePosition.y)) {
+                window.tetrisGame.currentPiece = oldPiece;
+            }
+        }
+
+        function checkCollision(x, y) {
+            const piece = window.tetrisGame.currentPiece;
+            const board = window.tetrisGame.board;
+            
+            for (let py = 0; py < piece.length; py++) {
+                for (let px = 0; px < piece[py].length; px++) {
+                    if (piece[py][px]) {
+                        const boardX = x + px;
+                        const boardY = y + py;
+                        
+                        if (boardX < 0 || boardX >= 10 || boardY >= 20) {
+                            return true;
+                        }
+                        
+                        if (boardY >= 0 && board[boardY][boardX]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function lockPiece() {
+            const piece = window.tetrisGame.currentPiece;
+            const pos = window.tetrisGame.piecePosition;
+            const board = window.tetrisGame.board;
+            
+            for (let y = 0; y < piece.length; y++) {
+                for (let x = 0; x < piece[y].length; x++) {
+                    if (piece[y][x]) {
+                        const boardX = pos.x + x;
+                        const boardY = pos.y + y;
+                        
+                        if (boardY >= 0) {
+                            board[boardY][boardX] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        function clearLines() {
+            const board = window.tetrisGame.board;
+            let linesCleared = 0;
+            
+            for (let y = 19; y >= 0; y--) {
+                if (board[y].every(cell => cell)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(10).fill(0));
+                    linesCleared++;
+                    y++;
+                }
+            }
+            
+            if (linesCleared > 0) {
+                window.tetrisGame.score += linesCleared * 100 * window.tetrisGame.level;
+                window.tetrisGame.level = Math.floor(window.tetrisGame.score / 1000) + 1;
+                updateTetrisStats();
+            }
+        }
+
+        function updateTetrisStats() {
+            document.getElementById('tetris-score').textContent = window.tetrisGame.score;
+            document.getElementById('tetris-level').textContent = window.tetrisGame.level;
+        }
+
+        function handleTetrisKey(e) {
+            switch(e.key) {
+                case 'ArrowLeft': movePiece(-1, 0); break;
+                case 'ArrowRight': movePiece(1, 0); break;
+                case 'ArrowDown': movePiece(0, 1); break;
+                case 'ArrowUp': rotatePiece(); break;
+                case ' ': // Пробел - сбросить
+                    while(movePiece(0, 1)) {}
+                    break;
+            }
+        }
+
+        function gameOverTetris() {
+            clearInterval(window.tetrisGame.gameLoop);
+            showMessage(`Игра окончена! Счет: ${window.tetrisGame.score}`);
+        }
+
+        function pauseTetris() {
+            if (window.tetrisGame.gameLoop) {
+                clearInterval(window.tetrisGame.gameLoop);
+                window.tetrisGame.gameLoop = null;
+                showMessage('Игра на паузе');
+            } else {
+                window.tetrisGame.gameLoop = setInterval(gameLoopTetris, 500);
+            }
+        }
+
+        // Косынка (упрощенная версия)
+        function startSolitaire() {
+            const boardElement = document.getElementById('solitaire-board');
+            window.solitaireGame.moves = 0;
+            window.solitaireGame.startTime = Date.now();
+            
+            // Создаем колоду
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            let deck = [];
+            
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({suit, value, color: suit === '♥' || suit === '♦' ? 'red' : 'black'});
+                }
+            }
+            
+            // Перемешиваем колоду
+            deck = deck.sort(() => Math.random() - 0.5);
+            
+            // Раскладываем карты
+            window.solitaireGame.tableau = [];
+            for (let i = 0; i < 7; i++) {
+                window.solitaireGame.tableau[i] = deck.splice(0, i + 1);
+            }
+            
+            window.solitaireGame.deck = deck;
+            window.solitaireGame.waste = [];
+            window.solitaireGame.foundations = [[], [], [], []];
+            
+            updateSolitaireDisplay();
+            updateSolitaireTimer();
+        }
+
+        function updateSolitaireDisplay() {
+            const boardElement = document.getElementById('solitaire-board');
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            
+            // Верхний ряд: колода, отбой, базовые стопки
+            html += '<div style="display: flex; gap: 10px;">';
+            html += `<div style="width: 80px; height: 120px; background: #006600; border: 1px solid #003300; border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="drawCard()">
+                        <span style="color: white; font-size: 24px;">${window.solitaireGame.deck.length}</span>
+                     </div>`;
+            
+            // Отбой
+            html += `<div style="width: 80px; height: 120px; background: white; border: 1px solid #003300; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                        ${window.solitaireGame.waste.length > 0 ? '🃏' : ''}
+                     </div>`;
+            
+            // Базовые стопки
+            for (let i = 0; i < 4; i++) {
+                const foundation = window.solitaireGame.foundations[i];
+                html += `<div style="width: 80px; height: 120px; background: #f0f0f0; border: 1px dashed #003300; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                            ${foundation.length > 0 ? '🃏' : '+'}
+                         </div>`;
+            }
+            html += '</div>';
+            
+            // Игровые стопки
+            html += '<div style="display: flex; gap: 10px; margin-top: 20px;">';
+            for (let i = 0; i < 7; i++) {
+                const pile = window.solitaireGame.tableau[i];
+                html += '<div style="width: 80px; min-height: 120px;">';
+                pile.forEach((card, index) => {
+                    const isVisible = index === pile.length - 1;
+                    html += `<div style="width: 80px; height: 40px; background: ${isVisible ? 'white' : '#006600'}; border: 1px solid #003300; border-radius: 3px; margin-bottom: -30px; display: flex; align-items: center; justify-content: center;">
+                                ${isVisible ? `${card.value}${card.suit}` : ''}
+                             </div>`;
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+            
+            boardElement.innerHTML = html;
+            document.getElementById('solitaire-deck').textContent = window.solitaireGame.deck.length;
+            document.getElementById('solitaire-moves').textContent = window.solitaireGame.moves;
+        }
+
+        function drawCard() {
+            if (window.solitaireGame.deck.length > 0) {
+                const card = window.solitaireGame.deck.pop();
+                window.solitaireGame.waste.push(card);
+                window.solitaireGame.moves++;
+                updateSolitaireDisplay();
+            }
+        }
+
+        function updateSolitaireTimer() {
+            if (window.solitaireGame.startTime) {
+                const time = Math.floor((Date.now() - window.solitaireGame.startTime) / 1000);
+                document.getElementById('solitaire-time').textContent = time;
+                setTimeout(updateSolitaireTimer, 1000);
+            }
+        }
+
+        // Инициализация музыкального плеера
+        function initializeMusicPlayer() {
+            window.musicPlayer = {
+                currentSong: 0,
+                isPlaying: false,
+                progress: 0,
+                songs: [
+                    { title: 'Windows Startup', artist: 'Microsoft', duration: 30 },
+                    { title: 'Classical Melody', artist: 'Orchestra', duration: 45 },
+                    { title: 'Electronic Beat', artist: 'DJ Sound', duration: 60 }
+                ]
+            };
+        }
+
+        function togglePlay() {
+            window.musicPlayer.isPlaying = !window.musicPlayer.isPlaying;
+            const playBtn = document.querySelector('.control-btn.play');
+            playBtn.textContent = window.musicPlayer.isPlaying ? '⏸️' : '▶️';
+            
+            if (window.musicPlayer.isPlaying) {
+                simulateMusicPlayback();
+            }
+        }
+
+        function simulateMusicPlayback() {
+            if (!window.musicPlayer.isPlaying) return;
+            
+            window.musicPlayer.progress += 1;
+            const progressBar = document.getElementById('music-progress');
+            const currentSong = window.musicPlayer.songs[window.musicPlayer.currentSong];
+            
+            const percent = (window.musicPlayer.progress / currentSong.duration) * 100;
+            progressBar.style.width = Math.min(percent, 100) + '%';
+            
+            if (window.musicPlayer.progress >= currentSong.duration) {
+                nextSong();
+            } else {
+                setTimeout(simulateMusicPlayback, 1000);
+            }
+        }
+
+        function prevSong() {
+            window.musicPlayer.currentSong--;
+            if (window.musicPlayer.currentSong < 0) {
+                window.musicPlayer.currentSong = window.musicPlayer.songs.length - 1;
+            }
+            playSong();
+        }
+
+        function nextSong() {
+            window.musicPlayer.currentSong++;
+            if (window.musicPlayer.currentSong >= window.musicPlayer.songs.length) {
+                window.musicPlayer.currentSong = 0;
+            }
+            playSong();
+        }
+
+        function playSong() {
+            const song = window.musicPlayer.songs[window.musicPlayer.currentSong];
+            document.getElementById('current-song').textContent = song.title;
+            document.getElementById('current-artist').textContent = song.artist;
+            window.musicPlayer.progress = 0;
+            
+            if (window.musicPlayer.isPlaying) {
+                simulateMusicPlayback();
+            }
+        }
+
+        // Браузер
+        function browserGoBack() {
+            showMessage('Назад');
+        }
+
+        function browserGoForward() {
+            showMessage('Вперед');
+        }
+
+        function browserRefresh() {
+            loadWebPage(document.getElementById('browser-url').value);
+        }
+
+        function navigateToUrl() {
+            const url = document.getElementById('browser-url').value;
+            loadWebPage(url);
+        }
+
+        function loadWebPage(url) {
+            const content = document.getElementById('browser-content');
+            let pageContent = '';
+            
+            if (url.includes('microsoft.com')) {
+                pageContent = `
+                    <div class="webpage">
+                        <h1>Microsoft Corporation</h1>
+                        <p>Американская транснациональная корпорация, разработчик программного обеспечения.</p>
+                        <p>Основана Биллом Гейтсом и Полом Алленом в 1975 году.</p>
+                        <div style="margin-top: 20px;">
+                            <h3>Продукты Microsoft:</h3>
+                            <ul>
+                                <li>Windows</li>
+                                <li>Office</li>
+                                <li>Azure</li>
+                                <li>Xbox</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('google.com')) {
+                pageContent = `
+                    <div class="webpage">
+                        <h1 style="color: #4285f4;">G</h1>
+                        <input type="text" style="width: 80%; padding: 10px; border: 1px solid #ddd; border-radius: 20px; margin: 20px 0;">
+                        <div style="display: flex; gap: 10px;">
+                            <button style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #dadce0; border-radius: 4px;">Поиск в Google</button>
+                            <button style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #dadce0; border-radius: 4px;">Мне повезёт!</button>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('youtube.com')) {
+                pageContent = `
+                    <div class="webpage">
+                        <h1 style="color: #ff0000;">YouTube</h1>
+                        <p>Самый популярный видеохостинг в мире.</p>
+                        <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <div style="background: #f0f0f0; padding: 10px; border-radius: 5px;">
+                                <div style="background: #ccc; height: 100px; margin-bottom: 10px;"></div>
+                                <p>Видео 1</p>
+                            </div>
+                            <div style="background: #f0f0f0; padding: 10px; border-radius: 5px;">
+                                <div style="background: #ccc; height: 100px; margin-bottom: 10px;"></div>
+                                <p>Видео 2</p>
+                            </div>
+                            <div style="background: #f0f0f0; padding: 10px; border-radius: 5px;">
+                                <div style="background: #ccc; height: 100px; margin-bottom: 10px;"></div>
+                                <p>Видео 3</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (url.includes('wikipedia.org')) {
+                pageContent = `
+                    <div class="webpage">
+                        <h1>Wikipedia</h1>
+                        <p>Свободная энциклопедия, которую может редактировать каждый.</p>
+                        <div style="margin-top: 20px;">
+                            <h3>Популярные статьи:</h3>
+                            <ul>
+                                <li>Microsoft Windows</li>
+                                <li>История компьютеров</li>
+                                <li>Веб-разработка</li>
+                                <li>Искусственный интеллект</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else {
+                pageContent = `
+                    <div class="webpage">
+                        <h1>Сайт: ${url}</h1>
+                        <p>Это демонстрационная версия веб-страницы.</p>
+                        <p>В реальном браузере здесь был бы загружен сайт ${url}</p>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = pageContent;
+        }
+
+        // Обновление часов
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const date = now.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+            
+            document.getElementById('time').textContent = time;
+            document.getElementById('date').textContent = date;
+        }
+
+        // Обновление панели задач
+        function updateTaskbar() {
+            const taskbarApps = document.getElementById('taskbar-apps');
+            taskbarApps.innerHTML = '';
+            
+            openWindows.forEach(windowId => {
+                const app = document.createElement('div');
+                app.className = 'taskbar-app active';
+                app.textContent = getWindowName(windowId);
+                app.onclick = () => toggleWindow(windowId);
+                taskbarApps.appendChild(app);
+            });
+        }
+
+        // Переключение окна (сворачивание/разворачивание)
+        function toggleWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                if (windowElement.style.display === 'none') {
+                    windowElement.style.display = 'block';
+                    windowElement.style.zIndex = '1000';
+                } else {
+                    windowElement.style.display = 'none';
+                }
+            }
+        }
+
+        // Получение имени окна
+        function getWindowName(windowId) {
+            const names = {
+                'explorer': 'Проводник',
+                'browser': 'Браузер',
+                'notepad': 'Блокнот',
+                'calculator': 'Калькулятор',
+                'paint': 'Paint',
+                'store': 'Microsoft Store',
+                'blockblast': 'Block Blast',
+                'minesweeper': 'Сапёр',
+                'snake': 'Змейка',
+                'tetris': 'Тетрис',
+                'solitaire': 'Косынка',
+                'music': 'Музыка'
+            };
+            return names[windowId] || 'Приложение';
+        }
+
+        // Меню Пуск
+        function toggleStartMenu() {
+            showNotification('Система', 'Меню "Пуск" в разработке');
+        }
+
+        // Центр уведомлений
+        function toggleNotificationCenter() {
+            showNotification('Система', 'Центр уведомлений в разработке');
+        }
+
+        // Показать уведомление
+        function showNotification(title, message) {
+            notificationCount++;
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: ${20 + (notificationCount - 1) * 80}px;
+                right: 20px;
+                background: white;
+                border-left: 4px solid #0078d7;
+                padding: 15px;
+                border-radius: 5px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                min-width: 300px;
+            `;
+            notification.innerHTML = `
+                <strong>${title}</strong>
+                <p>${message}</p>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+                notificationCount--;
+            }, 3000);
+        }
+
+        // Показать сообщение
+        function showMessage(text) {
+            alert(text);
+        }
+
+        // Таймер бездействия для заставки
+        function startIdleTimer() {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(showScreensaver, 300000); // 5 минут
+        }
+
+        // Показать заставку
+        function showScreensaver() {
+            const screensaver = document.getElementById('screensaver');
+            const logo = document.getElementById('screensaver-logo');
+            
+            const logos = {
+                7: 'Windows 7',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            
+            logo.textContent = logos[currentWindowsVersion] || 'Windows';
+            screensaver.style.display = 'flex';
+        }
+
+        // Скрыть заставку при движении мыши или нажатии клавиши
+        document.addEventListener('mousemove', hideScreensaver);
+        document.addEventListener('keydown', hideScreensaver);
+
+        function hideScreensaver() {
+            const screensaver = document.getElementById('screensaver');
+            if (screensaver.style.display === 'flex') {
+                screensaver.style.display = 'none';
+                startIdleTimer();
+            }
+        }
+    </script>
+</body>
+</html>
