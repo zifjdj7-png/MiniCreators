@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Simulator - Full Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* Ограничивающий контейнер */
+        .app-container {
+            position: fixed;
+            top: 40px;
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            overflow: hidden;
+        }
+
+        /* Экран BIOS */
+        #bios-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            color: #90ee90;
+            padding: 20px;
+        }
+
+        .bios-logo {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .bios-text {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-line;
+            text-align: left;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+
+        /* Экран выбора языка */
+        #language-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 9500;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .language-title {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .language-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .language-option:hover {
+            transform: translateY(-5px);
+            border-color: #4dabf7;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .language-option .icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .language-option h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        /* Экран выбора клавиатуры */
+        #keyboard-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2a2a4e 0%, #1a2a3e 100%);
+            z-index: 9400;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .keyboard-title {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .keyboard-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .keyboard-option:hover {
+            transform: translateY(-5px);
+            border-color: #4dabf7;
+        }
+
+        /* Экран выбора Windows */
+        #windows-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .windows-title {
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .windows-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .windows-version {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-version:hover {
+            transform: translateY(-5px);
+            border-color: #4dabf7;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .windows-version .icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .windows-version h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        /* Экран загрузки */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 8000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .windows-logo {
+            font-size: 48px;
+            margin-bottom: 30px;
+            color: white;
+            font-weight: 300;
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0078d7, #4dabf7);
+            transition: width 0.3s ease;
+        }
+
+        .loading-text {
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Рабочий стол */
+        #desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background-size: cover;
+        }
+
+        /* Фоны для разных версий Windows */
+        .win7-bg { 
+            background: linear-gradient(135deg, #1d539f 0%, #0c3b8c 100%); 
+        }
+        .win10-bg { 
+            background: linear-gradient(135deg, #0078d7 0%, #106ebe 100%); 
+        }
+        .win11-bg { 
+            background: linear-gradient(135deg, #000000 0%, #333333 100%); 
+        }
+
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .desktop-icon {
+            width: 70px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .icon-img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #333;
+        }
+
+        /* Панель задач */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 500;
+        }
+
+        .start-button {
+            height: 32px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            border-radius: 3px;
+            color: white;
+            margin-right: 10px;
+            min-width: 80px;
+        }
+
+        .win7-start {
+            background: linear-gradient(to bottom, #6ba543 0%, #4d7b2f 100%);
+            border: 1px solid #5a9435;
+        }
+
+        .win10-start {
+            background: linear-gradient(to bottom, #4dabf7 0%, #0078d7 100%);
+            border: 1px solid #6bc0ff;
+        }
+
+        .win11-start {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        .taskbar-apps {
+            flex: 1;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding: 0 10px;
+        }
+
+        .taskbar-app {
+            height: 32px;
+            padding: 0 15px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        .taskbar-app.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .taskbar-app:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 12px;
+            padding: 0 10px;
+        }
+
+        .time-display {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Окна - ФИКСИРОВАННЫЕ РАЗМЕРЫ И ПОЗИЦИИ */
+        .window {
+            position: absolute !important;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            overflow: hidden;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            max-width: 90vw !important;
+            max-height: 80vh !important;
+            resize: both;
+            overflow: auto;
+        }
+
+        .window.active {
+            display: block;
+            animation: windowAppear 0.3s ease;
+        }
+
+        @keyframes windowAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .window-header {
+            height: 40px;
+            background: linear-gradient(to bottom, #4c8ce6 0%, #2d62b9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            color: white;
+            font-size: 14px;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .window-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .window-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .window-btn.close:hover {
+            background: #e81123;
+        }
+
+        .window-content {
+            padding: 20px;
+            height: calc(100% - 40px);
+            overflow: auto;
+            color: #333;
+        }
+
+        /* Microsoft Store */
+        .store-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .store-app {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .store-app:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .store-app-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #0078d7, #4dabf7);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .store-app-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .store-app-desc {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Игры */
+        .game-container {
+            padding: 20px;
+            text-align: center;
+            height: 100%;
+            overflow: auto;
+        }
+
+        /* Minecraft 3D */
+        #minecraft-canvas {
+            border: 2px solid #333;
+            background: #8ab9ff;
+            display: block;
+            margin: 20px auto;
+            cursor: crosshair;
+        }
+
+        .minecraft-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .minecraft-control-btn {
+            padding: 10px 20px;
+            background: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .minecraft-control-btn:hover {
+            background: #005a9e;
+        }
+
+        .minecraft-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .minecraft-stat {
+            background: #00a859;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            min-width: 120px;
+            margin: 5px;
+        }
+
+        /* Block Blast Game */
+        .block-blast-board {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 2px;
+            margin: 20px auto;
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            justify-content: center;
+        }
+
+        .block-blast-cell {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .block-blast-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .game-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .game-stat {
+            background: #0078d7;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            min-width: 100px;
+            margin: 5px;
+        }
+
+        /* Кнопки для игр */
+        .game-button {
+            padding: 10px 20px;
+            background: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .game-button:hover {
+            background: #005a9e;
+        }
+
+        /* SEDA VPN */
+        .vpn-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .vpn-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .vpn-logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #0078d7;
+        }
+
+        .vpn-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .vpn-feature {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .vpn-feature-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #0078d7;
+        }
+
+        .vpn-countdown {
+            background: linear-gradient(135deg, #0078d7, #4dabf7);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 80px;
+        }
+
+        .countdown-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .countdown-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .download-button {
+            padding: 15px 30px;
+            background: #00a859;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: background 0.3s;
+        }
+
+        .download-button:hover {
+            background: #008749;
+        }
+
+        /* Заставка */
+        #screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screensaver-logo {
+            font-size: 60px;
+            color: white;
+            animation: screensaverFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes screensaverFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .windows-grid,
+            .language-grid,
+            .keyboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .window {
+                min-width: 300px !important;
+                min-height: 200px !important;
+            }
+            
+            .block-blast-board {
+                grid-template-columns: repeat(8, 30px);
+                grid-template-rows: repeat(8, 30px);
+            }
+            
+            .block-blast-cell {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+            
+            #minecraft-canvas {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        /* Прокрутка для окон */
+        .window-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .window-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .window-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .window-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран BIOS -->
+    <div id="bios-screen">
+        <div class="bios-logo">BIOS v2.0</div>
+        <div class="bios-text">
+            American Megatrends
+            Copyright (C) 2024
+            
+            Main Processor: Intel Core i9 14900K
+            Memory Testing: 32768MB OK
+            
+            Detecting IDE drives...
+            SATA-0: Samsung SSD 990 PRO 2TB
+            SATA-1: Seagate HDD 4TB
+            
+            Press any key to continue...
+        </div>
+    </div>
+
+    <!-- Экран выбора языка -->
+    <div id="language-selector">
+        <h1 class="language-title">Выберите язык системы</h1>
+        <div class="language-grid">
+            <div class="language-option" onclick="selectLanguage('ru')">
+                <div class="icon">🇷🇺</div>
+                <h3>Русский</h3>
+                <p>Россия</p>
+            </div>
+            <div class="language-option" onclick="selectLanguage('en')">
+                <div class="icon">🇺🇸</div>
+                <h3>English</h3>
+                <p>United States</p>
+            </div>
+            <div class="language-option" onclick="selectLanguage('de')">
+                <div class="icon">🇩🇪</div>
+                <h3>Deutsch</h3>
+                <p>Deutschland</p>
+            </div>
+            <div class="language-option" onclick="selectLanguage('fr')">
+                <div class="icon">🇫🇷</div>
+                <h3>Français</h3>
+                <p>France</p>
+            </div>
+            <div class="language-option" onclick="selectLanguage('es')">
+                <div class="icon">🇪🇸</div>
+                <h3>Español</h3>
+                <p>España</p>
+            </div>
+            <div class="language-option" onclick="selectLanguage('zh')">
+                <div class="icon">🇨🇳</div>
+                <h3>中文</h3>
+                <p>中国</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран выбора клавиатуры -->
+    <div id="keyboard-selector">
+        <h1 class="keyboard-title">Выберите раскладку клавиатуры</h1>
+        <div class="keyboard-grid">
+            <div class="keyboard-option" onclick="selectKeyboard('ru')">
+                <h3>🇷🇺 Русская</h3>
+                <p>ЙЦУКЕН</p>
+            </div>
+            <div class="keyboard-option" onclick="selectKeyboard('en-us')">
+                <h3>🇺🇸 Английская (США)</h3>
+                <p>QWERTY</p>
+            </div>
+            <div class="keyboard-option" onclick="selectKeyboard('en-uk')">
+                <h3>🇬🇧 Английская (Великобритания)</h3>
+                <p>QWERTY UK</p>
+            </div>
+            <div class="keyboard-option" onclick="selectKeyboard('de')">
+                <h3>🇩🇪 Немецкая</h3>
+                <p>QWERTZ</p>
+            </div>
+            <div class="keyboard-option" onclick="selectKeyboard('fr')">
+                <h3>🇫🇷 Французская</h3>
+                <p>AZERTY</p>
+            </div>
+            <div class="keyboard-option" onclick="selectKeyboard('ua')">
+                <h3>🇺🇦 Украинская</h3>
+                <p>ЙЦУКЕН Украина</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран выбора Windows -->
+    <div id="windows-selector">
+        <h1 class="windows-title">Выберите версию Windows</h1>
+        <div class="windows-grid">
+            <div class="windows-version" onclick="selectWindowsVersion(7)">
+                <div class="icon">🪟</div>
+                <h3>Windows 7</h3>
+                <p>Классический интерфейс Aero Glass</p>
+            </div>
+            <div class="windows-version" onclick="selectWindowsVersion(10)">
+                <div class="icon">🪟</div>
+                <h3>Windows 10</h3>
+                <p>Универсальная операционная система</p>
+            </div>
+            <div class="windows-version" onclick="selectWindowsVersion(11)">
+                <div class="icon">🪟</div>
+                <h3>Windows 11</h3>
+                <p>Современный дизайн с закругленными углами</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран загрузки -->
+    <div id="loading-screen">
+        <div class="windows-logo" id="loading-logo">Windows</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        <div class="loading-text" id="loading-text">Подготовка Windows...</div>
+    </div>
+
+    <!-- Рабочий стол -->
+    <div id="desktop">
+        <div class="desktop-icons" id="desktop-icons">
+            <!-- Иконки будут добавлены через JS -->
+        </div>
+    </div>
+
+    <!-- Панель задач -->
+    <div class="taskbar" id="taskbar">
+        <button class="start-button" id="start-button" onclick="toggleStartMenu()">
+            <span>⚡</span>
+            <span id="start-text">Пуск</span>
+        </button>
+        <div class="taskbar-apps" id="taskbar-apps"></div>
+        <div class="system-tray">
+            <div class="time-display" id="time-display">
+                <div id="time">10:00</div>
+                <div id="date" style="font-size: 10px;">Пн, 20 янв</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер для окон -->
+    <div class="app-container" id="app-container"></div>
+
+    <!-- Microsoft Store -->
+    <div id="window-store" class="window" style="width: 800px; height: 600px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🛒</span>
+                <span>Microsoft Store</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('store')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('store')">□</button>
+                <button class="window-btn close" onclick="closeWindow('store')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <h2 style="color: #333; margin-bottom: 20px;">Microsoft Store</h2>
+            <div class="store-grid" id="store-apps-grid">
+                <!-- Приложения будут загружены через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Minecraft 3D -->
+    <div id="window-minecraft" class="window" style="width: 700px; height: 650px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>⛏️</span>
+                <span>Minecraft 3D</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('minecraft')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('minecraft')">□</button>
+                <button class="window-btn close" onclick="closeWindow('minecraft')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Minecraft 3D</h2>
+                <div class="minecraft-stats">
+                    <div class="minecraft-stat" id="mc-blocks">Блоки: 0</div>
+                    <div class="minecraft-stat" id="mc-score">Счет: 0</div>
+                    <div class="minecraft-stat" id="mc-health">Здоровье: 100%</div>
+                </div>
+                <canvas id="minecraft-canvas" width="400" height="400"></canvas>
+                <div class="minecraft-controls">
+                    <button class="minecraft-control-btn" onclick="minecraftAddBlock()">Добавить блок</button>
+                    <button class="minecraft-control-btn" onclick="minecraftRemoveBlock()">Удалить блок</button>
+                    <button class="minecraft-control-btn" onclick="minecraftChangeTexture()">Сменить текстуру</button>
+                    <button class="minecraft-control-btn" onclick="minecraftReset()">Новая игра</button>
+                </div>
+                <div style="margin-top: 20px; color: #666;">
+                    <p>Управление: WASD - движение, мышь - вращение, ПКМ - добавить блок, ЛКМ - удалить блок</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEDA VPN -->
+    <div id="window-sedavpn" class="window" style="width: 800px; height: 700px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🔒</span>
+                <span>SEDA VPN</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('sedavpn')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('sedavpn')">□</button>
+                <button class="window-btn close" onclick="closeWindow('sedavpn')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="vpn-container">
+                <div class="vpn-header">
+                    <div class="vpn-logo">🔒</div>
+                    <h1 style="color: #0078d7;">SEDA VPN</h1>
+                    <p style="color: #666; font-size: 18px; margin-top: 10px;">Безопасность и анонимность нового поколения</p>
+                </div>
+                
+                <div class="vpn-countdown">
+                    <h2 style="color: white; margin-bottom: 20px;">До выхода осталось:</h2>
+                    <div class="countdown-timer" id="countdown-timer">
+                        <div class="countdown-item">
+                            <div class="countdown-number" id="days">00</div>
+                            <div class="countdown-label">Дней</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-number" id="hours">00</div>
+                            <div class="countdown-label">Часов</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-number" id="minutes">00</div>
+                            <div class="countdown-label">Минут</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-number" id="seconds">00</div>
+                            <div class="countdown-label">Секунд</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 20px; font-size: 16px;">Дата выхода: 12 февраля 2026 года</p>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <button class="download-button" onclick="downloadSedaVPN()">
+                        ⬇️ Скачать SEDA VPN (Предзаказ)
+                    </button>
+                    <p style="color: #666; margin-top: 10px; font-size: 14px;">Бесплатная версия на 30 дней</p>
+                </div>
+                
+                <h2 style="color: #333; margin: 30px 0 20px 0;">Что такое SEDA VPN?</h2>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+                    SEDA VPN - это революционный VPN-сервис нового поколения, разработанный с использованием 
+                    квантово-устойчивых алгоритмов шифрования. Наша технология обеспечивает полную 
+                    анонимность и безопасность вашего интернет-соединения.
+                </p>
+                
+                <h2 style="color: #333; margin: 30px 0 20px 0;">Основные возможности:</h2>
+                <div class="vpn-features">
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">🚀</div>
+                        <h3>Высокая скорость</h3>
+                        <p>До 10 Гбит/с без потерь</p>
+                    </div>
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">🌍</div>
+                        <h3>Глобальная сеть</h3>
+                        <p>150+ стран, 3000+ серверов</p>
+                    </div>
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">🔐</div>
+                        <h3>Квантовое шифрование</h3>
+                        <p>Защита будущего уже сегодня</p>
+                    </div>
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">🎮</div>
+                        <h3>Игровой режим</h3>
+                        <p>Нулевой пинг, защита от DDoS</p>
+                    </div>
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">📺</div>
+                        <h3>Streaming 4K</h3>
+                        <p>Безграничный доступ к контенту</p>
+                    </div>
+                    <div class="vpn-feature">
+                        <div class="vpn-feature-icon">💰</div>
+                        <h3>Бесплатный тариф</h3>
+                        <p>30 дней премиум-доступа</p>
+                    </div>
+                </div>
+                
+                <h2 style="color: #333; margin: 30px 0 20px 0;">Как скачать:</h2>
+                <ol style="color: #666; line-height: 1.8; padding-left: 20px;">
+                    <li>Нажмите кнопку "Скачать SEDA VPN" выше</li>
+                    <li>Запустите установочный файл</li>
+                    <li>Следуйте инструкциям установщика</li>
+                    <li>Зарегистрируйте бесплатный аккаунт</li>
+                    <li>Выберите сервер и подключитесь</li>
+                </ol>
+                
+                <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                    <h3 style="color: #333;">Технические требования:</h3>
+                    <ul style="color: #666; line-height: 1.8; margin-top: 10px;">
+                        <li>Windows 10/11 (64-bit)</li>
+                        <li>4 ГБ оперативной памяти</li>
+                        <li>1 ГБ свободного места</li>
+                        <li>Интернет-соединение</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Block Blast -->
+    <div id="window-blockblast" class="window" style="width: 500px; height: 600px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>💥</span>
+                <span>Block Blast</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('blockblast')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('blockblast')">□</button>
+                <button class="window-btn close" onclick="closeWindow('blockblast')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Block Blast</h2>
+                <div class="game-info">
+                    <div class="game-stats">
+                        <div class="game-stat" id="bb-score">Счёт: 0</div>
+                        <div class="game-stat" id="bb-moves">Ходы: 50</div>
+                        <div class="game-stat" id="bb-level">Уровень: 1</div>
+                    </div>
+                    <button class="game-button" onclick="startBlockBlast()">Новая игра</button>
+                </div>
+                <div class="block-blast-board" id="bb-board"></div>
+                <div style="margin-top: 20px;">
+                    <p style="color: #666;">Выбирайте группы одинаковых блоков для их уничтожения</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Сапёр -->
+    <div id="window-minesweeper" class="window" style="width: 450px; height: 550px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>💣</span>
+                <span>Сапёр</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('minesweeper')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('minesweeper')">□</button>
+                <button class="window-btn close" onclick="closeWindow('minesweeper')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Сапёр</h2>
+                <div class="game-info">
+                    <div style="display: flex; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px; margin: 5px;">
+                            Мины: <span id="ms-mines">10</span>
+                        </div>
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px; margin: 5px;">
+                            Время: <span id="ms-time">0</span>
+                        </div>
+                    </div>
+                    <button class="game-button" onclick="startMinesweeper()">Новая игра</button>
+                    <div style="margin-top: 10px;">
+                        <label style="color: #666;">Сложность: </label>
+                        <select id="ms-difficulty" style="padding: 5px;">
+                            <option value="easy">Легкая (8x8, 10 мин)</option>
+                            <option value="medium" selected>Средняя (10x10, 15 мин)</option>
+                            <option value="hard">Сложная (12x12, 20 мин)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ms-board" style="margin: 20px auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Игра Змейка -->
+    <div id="window-snake" class="window" style="width: 500px; height: 550px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🐍</span>
+                <span>Змейка</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('snake')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('snake')">□</button>
+                <button class="window-btn close" onclick="closeWindow('snake')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="game-container">
+                <h2 style="color: #333;">Змейка</h2>
+                <div class="game-info">
+                    <div style="display: flex; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px; margin: 5px;">
+                            Счёт: <span id="snake-score">0</span>
+                        </div>
+                        <div style="background: #0078d7; color: white; padding: 10px 20px; border-radius: 5px; margin: 5px;">
+                            Рекорд: <span id="snake-highscore">0</span>
+                        </div>
+                    </div>
+                    <button class="game-button" onclick="startSnake()">Начать игру</button>
+                    <button class="game-button" onclick="pauseSnake()">Пауза</button>
+                </div>
+                <canvas id="snake-canvas" width="400" height="400" style="border: 2px solid #333; background: #000; margin: 20px auto; display: block;"></canvas>
+                <div style="color: #666; text-align: center;">
+                    <p>Управление: Стрелки ←↑→↓</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Браузер -->
+    <div id="window-browser" class="window" style="width: 900px; height: 700px;">
+        <div class="window-header">
+            <div class="window-title">
+                <span>🌐</span>
+                <span>Браузер Windows</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize" onclick="minimizeWindow('browser')">−</button>
+                <button class="window-btn maximize" onclick="maximizeWindow('browser')">□</button>
+                <button class="window-btn close" onclick="closeWindow('browser')">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <div style="display: flex; gap: 10px; padding: 10px; background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                    <button style="padding: 5px 10px; border: none; background: white; border-radius: 3px; cursor: pointer;" onclick="browserGoBack()">←</button>
+                    <button style="padding: 5px 10px; border: none; background: white; border-radius: 3px; cursor: pointer;" onclick="browserGoForward()">→</button>
+                    <input type="text" style="flex: 1; padding: 8px 15px; border: 1px solid #ddd; border-radius: 20px;" 
+                           id="browser-url" value="https://www.microsoft.com" onkeypress="if(event.key === 'Enter') navigateToUrl()">
+                    <button style="padding: 8px 20px; background: #0078d7; color: white; border: none; border-radius: 3px; cursor: pointer;" 
+                            onclick="navigateToUrl()">Перейти</button>
+                </div>
+                <div style="flex: 1; padding: 20px; overflow-y: auto;" id="browser-content">
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #0078d7;">Добро пожаловать в браузер Windows!</h1>
+                        <p>Введите адрес сайта в строку выше и нажмите Enter.</p>
+                        <div style="margin-top: 30px;">
+                            <h3>Быстрые ссылки:</h3>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                                <button class="game-button" onclick="loadWebPage('microsoft')">Microsoft</button>
+                                <button class="game-button" onclick="loadWebPage('google')">Google</button>
+                                <button class="game-button" onclick="loadWebPage('youtube')">YouTube</button>
+                                <button class="game-button" onclick="loadWebPage('wikipedia')">Wikipedia</button>
+                                <button class="game-button" onclick="loadWebPage('sedavpn')">SEDA VPN</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Заставка -->
+    <div id="screensaver">
+        <div class="screensaver-logo" id="screensaver-logo">Windows</div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let currentWindowsVersion = 10;
+        let currentLanguage = 'ru';
+        let currentKeyboard = 'ru';
+        let idleTimer = null;
+        let draggedWindow = null;
+        let dragOffset = { x: 0, y: 0 };
+        let openWindows = new Set();
+        let notificationCount = 0;
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Система Windows Simulator загружена');
+            
+            // Показываем BIOS экран на 2 секунды
+            setTimeout(() => {
+                document.getElementById('bios-screen').style.display = 'none';
+                document.getElementById('language-selector').style.display = 'flex';
+            }, 2000);
+            
+            // Добавляем обработчик клавиш для BIOS
+            document.addEventListener('keydown', skipBios);
+            document.addEventListener('click', skipBios);
+            
+            // Инициализируем все окна в контейнере
+            initializeWindowPositions();
+            
+            // Запускаем таймер для SEDA VPN
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        });
+
+        function skipBios() {
+            document.getElementById('bios-screen').style.display = 'none';
+            document.getElementById('language-selector').style.display = 'flex';
+            document.removeEventListener('keydown', skipBios);
+            document.removeEventListener('click', skipBios);
+        }
+
+        // Инициализация позиций окон
+        function initializeWindowPositions() {
+            const windows = [
+                'store', 'minecraft', 'sedavpn', 'blockblast', 'minesweeper', 'snake', 'browser'
+            ];
+            
+            const positions = [
+                { top: '50px', left: '100px' },
+                { top: '80px', left: '200px' },
+                { top: '60px', left: '150px' },
+                { top: '100px', left: '300px' },
+                { top: '120px', left: '350px' },
+                { top: '90px', left: '250px' },
+                { top: '70px', left: '180px' }
+            ];
+            
+            windows.forEach((windowId, index) => {
+                const window = document.getElementById(`window-${windowId}`);
+                if (window) {
+                    const pos = positions[index % positions.length];
+                    window.style.top = pos.top;
+                    window.style.left = pos.left;
+                    window.style.zIndex = '100';
+                }
+            });
+        }
+
+        // Выбор языка
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            const languages = {
+                'ru': 'Русский',
+                'en': 'English',
+                'de': 'Deutsch',
+                'fr': 'Français',
+                'es': 'Español',
+                'zh': '中文'
+            };
+            
+            console.log(`Выбран язык: ${languages[lang]}`);
+            document.getElementById('language-selector').style.display = 'none';
+            document.getElementById('keyboard-selector').style.display = 'flex';
+            
+            // Обновляем текст в зависимости от языка
+            if (lang !== 'ru') {
+                document.querySelector('.keyboard-title').textContent = 'Select Keyboard Layout';
+            }
+        }
+
+        // Выбор клавиатуры
+        function selectKeyboard(keyboard) {
+            currentKeyboard = keyboard;
+            const keyboards = {
+                'ru': 'Русская (ЙЦУКЕН)',
+                'en-us': 'Английская США (QWERTY)',
+                'en-uk': 'Английская UK (QWERTY)',
+                'de': 'Немецкая (QWERTZ)',
+                'fr': 'Французская (AZERTY)',
+                'ua': 'Украинская (ЙЦУКЕН)'
+            };
+            
+            console.log(`Выбрана клавиатура: ${keyboards[keyboard]}`);
+            document.getElementById('keyboard-selector').style.display = 'none';
+            document.getElementById('windows-selector').style.display = 'flex';
+        }
+
+        // Выбор версии Windows
+        function selectWindowsVersion(version) {
+            currentWindowsVersion = version;
+            
+            document.getElementById('windows-selector').style.display = 'none';
+            document.getElementById('loading-screen').style.display = 'flex';
+            
+            // Устанавливаем логотип загрузки
+            const logos = {
+                7: 'Windows 7',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            document.getElementById('loading-logo').textContent = logos[version] || 'Windows';
+            
+            // Запускаем процесс загрузки
+            simulateBootProcess();
+        }
+
+        // Симуляция процесса загрузки
+        function simulateBootProcess() {
+            const loadingBar = document.getElementById('loading-bar');
+            const loadingText = document.getElementById('loading-text');
+            const steps = [
+                { progress: 10, text: 'Загрузка файлов Windows...' },
+                { progress: 25, text: 'Подготовка устройств...' },
+                { progress: 40, text: 'Загрузка драйверов...' },
+                { progress: 60, text: 'Инициализация системы...' },
+                { progress: 80, text: 'Подготовка рабочего стола...' },
+                { progress: 100, text: 'Добро пожаловать!' }
+            ];
+
+            let currentStep = 0;
+            
+            function nextStep() {
+                if (currentStep >= steps.length) {
+                    // Загрузка завершена
+                    setTimeout(() => {
+                        initializeDesktop();
+                    }, 500);
+                    return;
+                }
+                
+                const step = steps[currentStep];
+                loadingBar.style.width = step.progress + '%';
+                loadingText.textContent = step.text;
+                currentStep++;
+                
+                setTimeout(nextStep, 800);
+            }
+            
+            nextStep();
+        }
+
+        // Инициализация рабочего стола
+        function initializeDesktop() {
+            document.getElementById('loading-screen').style.display = 'none';
+            
+            const desktop = document.getElementById('desktop');
+            desktop.style.display = 'block';
+            
+            // Устанавливаем фон в зависимости от версии Windows
+            const bgClasses = ['win7-bg', 'win10-bg', 'win11-bg'];
+            desktop.classList.remove(...bgClasses);
+            desktop.classList.add(`win${currentWindowsVersion}-bg`);
+            
+            // Обновляем кнопку Пуск
+            const startButton = document.getElementById('start-button');
+            const startClasses = ['win7-start', 'win10-start', 'win11-start'];
+            startButton.classList.remove(...startClasses);
+            startButton.classList.add(`win${currentWindowsVersion}-start`);
+            
+            // Добавляем иконки на рабочий стол
+            populateDesktopIcons();
+            
+            // Инициализируем системные часы
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Инициализируем окна
+            initializeWindows();
+            
+            // Инициализируем Microsoft Store
+            initializeMicrosoftStore();
+            
+            // Инициализируем Minecraft
+            initializeMinecraft();
+            
+            // Запускаем таймер для заставки
+            startIdleTimer();
+            
+            // Показать приветственное уведомление
+            setTimeout(() => {
+                showNotification('Система', 'Windows успешно загружена!');
+                showNotification('Язык', `Выбран язык: ${getLanguageName(currentLanguage)}`);
+                showNotification('Клавиатура', `Выбрана раскладка: ${getKeyboardName(currentKeyboard)}`);
+            }, 1000);
+        }
+
+        function getLanguageName(code) {
+            const languages = {
+                'ru': 'Русский',
+                'en': 'English',
+                'de': 'Deutsch',
+                'fr': 'Français',
+                'es': 'Español',
+                'zh': '中文'
+            };
+            return languages[code] || code;
+        }
+
+        function getKeyboardName(code) {
+            const keyboards = {
+                'ru': 'Русская (ЙЦУКЕН)',
+                'en-us': 'Английская США (QWERTY)',
+                'en-uk': 'Английская UK (QWERTY)',
+                'de': 'Немецкая (QWERTZ)',
+                'fr': 'Французская (AZERTY)',
+                'ua': 'Украинская (ЙЦУКЕН)'
+            };
+            return keyboards[code] || code;
+        }
+
+        // Заполняем иконки на рабочем столе
+        function populateDesktopIcons() {
+            const desktopIcons = document.getElementById('desktop-icons');
+            
+            const icons = [
+                { icon: '🛒', name: 'Microsoft Store', action: () => openWindow('store') },
+                { icon: '⛏️', name: 'Minecraft 3D', action: () => openWindow('minecraft') },
+                { icon: '🔒', name: 'SEDA VPN', action: () => openWindow('sedavpn') },
+                { icon: '💥', name: 'Block Blast', action: () => openWindow('blockblast') },
+                { icon: '💣', name: 'Сапёр', action: () => openWindow('minesweeper') },
+                { icon: '🐍', name: 'Змейка', action: () => openWindow('snake') },
+                { icon: '🌐', name: 'Браузер', action: () => openWindow('browser') }
+            ];
+            
+            desktopIcons.innerHTML = '';
+            
+            icons.forEach(iconData => {
+                const icon = document.createElement('div');
+                icon.className = 'desktop-icon';
+                icon.innerHTML = `
+                    <div class="icon-img">${iconData.icon}</div>
+                    <div>${iconData.name}</div>
+                `;
+                icon.onclick = iconData.action;
+                desktopIcons.appendChild(icon);
+            });
+        }
+
+        // Инициализация окон
+        function initializeWindows() {
+            // Добавляем функционал перетаскивания для всех окон
+            document.querySelectorAll('.window-header').forEach(header => {
+                header.addEventListener('mousedown', function(e) {
+                    if (e.target.classList.contains('window-btn')) return;
+                    
+                    draggedWindow = this.parentElement;
+                    const rect = draggedWindow.getBoundingClientRect();
+                    dragOffset.x = e.clientX - rect.left;
+                    dragOffset.y = e.clientY - rect.top;
+                    
+                    // Поднимаем окно поверх других
+                    document.querySelectorAll('.window').forEach(w => {
+                        w.style.zIndex = '100';
+                    });
+                    draggedWindow.style.zIndex = '1000';
+                });
+            });
+            
+            // Обработка движения мыши
+            document.addEventListener('mousemove', function(e) {
+                if (draggedWindow) {
+                    e.preventDefault();
+                    
+                    // Ограничиваем позицию в пределах видимой области
+                    const maxX = window.innerWidth - draggedWindow.offsetWidth;
+                    const maxY = window.innerHeight - 40 - draggedWindow.offsetHeight;
+                    
+                    let x = e.clientX - dragOffset.x;
+                    let y = e.clientY - dragOffset.y;
+                    
+                    x = Math.max(0, Math.min(x, maxX));
+                    y = Math.max(0, Math.min(y, maxY));
+                    
+                    draggedWindow.style.left = x + 'px';
+                    draggedWindow.style.top = y + 'px';
+                }
+            });
+            
+            // Отпускание мыши
+            document.addEventListener('mouseup', function() {
+                draggedWindow = null;
+            });
+            
+            // Добавляем обработчики для изменения размера окон
+            document.querySelectorAll('.window').forEach(window => {
+                window.addEventListener('mousedown', function(e) {
+                    if (e.offsetX > this.offsetWidth - 10 && e.offsetY > this.offsetHeight - 10) {
+                        this.classList.add('resizing');
+                    }
+                });
+            });
+        }
+
+        // Открытие окна с безопасной позицией
+        function openWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (!windowElement) {
+                console.error('Окно не найдено:', windowId);
+                return;
+            }
+            
+            // Проверяем и корректируем позицию окна
+            const rect = windowElement.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - 40 - rect.height;
+            
+            let x = parseInt(windowElement.style.left) || 100;
+            let y = parseInt(windowElement.style.top) || 100;
+            
+            x = Math.max(20, Math.min(x, maxX - 20));
+            y = Math.max(20, Math.min(y, maxY - 20));
+            
+            windowElement.style.left = x + 'px';
+            windowElement.style.top = y + 'px';
+            
+            // Показываем окно
+            windowElement.classList.add('active');
+            windowElement.style.display = 'block';
+            
+            // Поднимаем поверх других окон
+            document.querySelectorAll('.window').forEach(w => {
+                w.style.zIndex = '100';
+            });
+            windowElement.style.zIndex = '1000';
+            
+            // Добавляем в список открытых окон
+            openWindows.add(windowId);
+            updateTaskbar();
+            
+            // Инициализируем игру если нужно
+            if (windowId === 'blockblast') {
+                setTimeout(() => startBlockBlast(), 100);
+            } else if (windowId === 'minesweeper') {
+                setTimeout(() => startMinesweeper(), 100);
+            } else if (windowId === 'snake') {
+                setTimeout(() => startSnake(), 100);
+            } else if (windowId === 'minecraft') {
+                setTimeout(() => startMinecraft(), 100);
+            }
+            
+            return windowElement;
+        }
+
+        // Закрытие окна
+        function closeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                windowElement.classList.remove('active');
+                openWindows.delete(windowId);
+                updateTaskbar();
+            }
+        }
+
+        // Сворачивание окна
+        function minimizeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                windowElement.style.display = 'none';
+            }
+        }
+
+        // Разворачивание окна
+        function maximizeWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                if (windowElement.style.width === '90vw' && windowElement.style.height === '80vh') {
+                    // Возвращаем нормальный размер
+                    windowElement.style.width = '';
+                    windowElement.style.height = '';
+                    windowElement.style.top = '100px';
+                    windowElement.style.left = '200px';
+                } else {
+                    // Разворачиваем на максимальный размер
+                    windowElement.style.width = '90vw';
+                    windowElement.style.height = '80vh';
+                    windowElement.style.top = '20px';
+                    windowElement.style.left = '5vw';
+                }
+            }
+        }
+
+        // Инициализация Microsoft Store
+        function initializeMicrosoftStore() {
+            const storeAppsGrid = document.getElementById('store-apps-grid');
+            
+            const storeApps = [
+                { id: 'minecraft', icon: '⛏️', title: 'Minecraft 3D', desc: '3D песочница', action: () => openWindow('minecraft') },
+                { id: 'blockblast', icon: '💥', title: 'Block Blast', desc: 'Аркадная игра с блоками', action: () => openWindow('blockblast') },
+                { id: 'minesweeper', icon: '💣', title: 'Сапёр', desc: 'Классическая игра с минами', action: () => openWindow('minesweeper') },
+                { id: 'snake', icon: '🐍', title: 'Змейка', desc: 'Классическая игра "Змейка"', action: () => openWindow('snake') },
+                { id: 'sedavpn', icon: '🔒', title: 'SEDA VPN', desc: 'VPN нового поколения', action: () => openWindow('sedavpn') },
+                { id: 'browser', icon: '🌐', title: 'Браузер', desc: 'Веб-браузер', action: () => openWindow('browser') }
+            ];
+            
+            storeAppsGrid.innerHTML = storeApps.map(app => `
+                <div class="store-app" onclick="${app.action.toString().replace('() => ', '')}">
+                    <div class="store-app-icon">${app.icon}</div>
+                    <div class="store-app-title">${app.title}</div>
+                    <div class="store-app-desc">${app.desc}</div>
+                    <button style="padding: 5px 15px; background: #0078d7; color: white; border: none; border-radius: 3px; cursor: pointer; margin-top: 10px;">Установить</button>
+                </div>
+            `).join('');
+        }
+
+        // Инициализация Minecraft 3D
+        function initializeMinecraft() {
+            window.minecraftGame = {
+                canvas: null,
+                ctx: null,
+                blocks: [],
+                player: { x: 200, y: 200, z: 0 },
+                camera: { angle: 0, tilt: 0 },
+                score: 0,
+                health: 100,
+                blockCount: 0,
+                textures: ['#8B4513', '#228B22', '#1E90FF', '#FFD700', '#DC143C'],
+                currentTexture: 0
+            };
+        }
+
+        function startMinecraft() {
+            const canvas = document.getElementById('minecraft-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            window.minecraftGame.canvas = canvas;
+            window.minecraftGame.ctx = ctx;
+            window.minecraftGame.blocks = [];
+            window.minecraftGame.score = 0;
+            window.minecraftGame.health = 100;
+            window.minecraftGame.blockCount = 0;
+            
+            // Очищаем canvas
+            ctx.fillStyle = '#8ab9ff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем землю
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+            
+            // Рисуем траву
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 20);
+            
+            // Добавляем несколько начальных блоков
+            for (let i = 0; i < 5; i++) {
+                addMinecraftBlock();
+            }
+            
+            // Обновляем статистику
+            updateMinecraftStats();
+            
+            // Добавляем обработчики управления
+            setupMinecraftControls();
+            
+            // Запускаем игровой цикл
+            if (window.minecraftGame.gameLoop) {
+                clearInterval(window.minecraftGame.gameLoop);
+            }
+            window.minecraftGame.gameLoop = setInterval(gameLoopMinecraft, 100);
+        }
+
+        function addMinecraftBlock() {
+            const canvas = window.minecraftGame.canvas;
+            const texture = window.minecraftGame.textures[window.minecraftGame.currentTexture];
+            
+            const block = {
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: Math.random() * (canvas.height - 140) + 20,
+                width: 40,
+                height: 40,
+                color: texture,
+                texture: window.minecraftGame.currentTexture
+            };
+            
+            window.minecraftGame.blocks.push(block);
+            window.minecraftGame.blockCount++;
+            window.minecraftGame.score += 10;
+            
+            updateMinecraftStats();
+            drawMinecraft();
+        }
+
+        function removeMinecraftBlock() {
+            if (window.minecraftGame.blocks.length > 0) {
+                window.minecraftGame.blocks.pop();
+                window.minecraftGame.blockCount--;
+                window.minecraftGame.score += 5;
+                
+                updateMinecraftStats();
+                drawMinecraft();
+            }
+        }
+
+        function minecraftChangeTexture() {
+            window.minecraftGame.currentTexture = (window.minecraftGame.currentTexture + 1) % window.minecraftGame.textures.length;
+            showNotification('Minecraft', `Текстура изменена на: ${window.minecraftGame.currentTexture + 1}`);
+        }
+
+        function minecraftReset() {
+            startMinecraft();
+        }
+
+        function setupMinecraftControls() {
+            const canvas = window.minecraftGame.canvas;
+            
+            // Управление WASD
+            document.addEventListener('keydown', function(e) {
+                const player = window.minecraftGame.player;
+                switch(e.key.toLowerCase()) {
+                    case 'w': player.y -= 10; break;
+                    case 's': player.y += 10; break;
+                    case 'a': player.x -= 10; break;
+                    case 'd': player.x += 10; break;
+                }
+                drawMinecraft();
+            });
+            
+            // Добавление/удаление блоков по клику
+            canvas.addEventListener('click', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Проверяем клик по блоку
+                for (let i = window.minecraftGame.blocks.length - 1; i >= 0; i--) {
+                    const block = window.minecraftGame.blocks[i];
+                    if (x >= block.x && x <= block.x + block.width &&
+                        y >= block.y && y <= block.y + block.height) {
+                        window.minecraftGame.blocks.splice(i, 1);
+                        window.minecraftGame.blockCount--;
+                        window.minecraftGame.score += 20;
+                        updateMinecraftStats();
+                        drawMinecraft();
+                        return;
+                    }
+                }
+                
+                // Добавляем новый блок
+                const texture = window.minecraftGame.textures[window.minecraftGame.currentTexture];
+                window.minecraftGame.blocks.push({
+                    x: x - 20,
+                    y: y - 20,
+                    width: 40,
+                    height: 40,
+                    color: texture,
+                    texture: window.minecraftGame.currentTexture
+                });
+                window.minecraftGame.blockCount++;
+                window.minecraftGame.score += 10;
+                updateMinecraftStats();
+                drawMinecraft();
+            });
+            
+            // Правый клик для быстрого добавления
+            canvas.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                addMinecraftBlock();
+            });
+        }
+
+        function gameLoopMinecraft() {
+            drawMinecraft();
+        }
+
+        function drawMinecraft() {
+            const ctx = window.minecraftGame.ctx;
+            const canvas = window.minecraftGame.canvas;
+            const blocks = window.minecraftGame.blocks;
+            const player = window.minecraftGame.player;
+            
+            // Очищаем canvas
+            ctx.fillStyle = '#8ab9ff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем землю
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+            
+            // Рисуем траву
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 20);
+            
+            // Рисуем блоки с 3D эффектом
+            blocks.forEach(block => {
+                // Основной блок
+                ctx.fillStyle = block.color;
+                ctx.fillRect(block.x, block.y, block.width, block.height);
+                
+                // Тень для 3D эффекта
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fillRect(block.x + 5, block.y + 5, block.width, block.height);
+                
+                // Светлая сторона для 3D эффекта
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(block.x - 2, block.y - 2, block.width, block.height);
+                
+                // Текстура блока
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(block.x + 10, block.y + 10, 5, 5);
+                ctx.strokeRect(block.x + 25, block.y + 10, 5, 5);
+                ctx.strokeRect(block.x + 10, block.y + 25, 5, 5);
+                ctx.strokeRect(block.x + 25, block.y + 25, 5, 5);
+            });
+            
+            // Рисуем игрока
+            ctx.fillStyle = '#FF6B6B';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Глаза игрока
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(player.x - 5, player.y - 5, 4, 0, Math.PI * 2);
+            ctx.arc(player.x + 5, player.y - 5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(player.x - 5, player.y - 5, 2, 0, Math.PI * 2);
+            ctx.arc(player.x + 5, player.y - 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function updateMinecraftStats() {
+            document.getElementById('mc-blocks').textContent = `Блоки: ${window.minecraftGame.blockCount}`;
+            document.getElementById('mc-score').textContent = `Счет: ${window.minecraftGame.score}`;
+            document.getElementById('mc-health').textContent = `Здоровье: ${window.minecraftGame.health}%`;
+        }
+
+        // Браузер
+        function browserGoBack() {
+            showMessage('Кнопка "Назад"');
+        }
+
+        function browserGoForward() {
+            showMessage('Кнопка "Вперед"');
+        }
+
+        function navigateToUrl() {
+            const url = document.getElementById('browser-url').value;
+            loadWebPage(url);
+        }
+
+        function loadWebPage(page) {
+            const content = document.getElementById('browser-content');
+            let pageContent = '';
+            
+            if (page.includes('microsoft') || page === 'microsoft') {
+                pageContent = `
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #0078d7;">Microsoft Corporation</h1>
+                        <p>Американская транснациональная корпорация, разработчик программного обеспечения.</p>
+                        <div style="margin-top: 30px;">
+                            <h3>Продукты Microsoft:</h3>
+                            <ul style="color: #666; line-height: 1.8;">
+                                <li>Windows</li>
+                                <li>Office</li>
+                                <li>Azure</li>
+                                <li>Xbox</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else if (page.includes('google') || page === 'google') {
+                pageContent = `
+                    <div style="text-align: center; max-width: 600px; margin: 50px auto;">
+                        <h1 style="color: #4285f4; font-size: 72px; margin-bottom: 30px;">Google</h1>
+                        <input type="text" style="width: 80%; padding: 12px 20px; border: 1px solid #dfe1e5; border-radius: 24px; font-size: 16px; margin-bottom: 30px;">
+                        <div style="display: flex; gap: 15px; justify-content: center;">
+                            <button style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; cursor: pointer;">Поиск в Google</button>
+                            <button style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #f8f9fa; border-radius: 4px; cursor: pointer;">Мне повезёт!</button>
+                        </div>
+                    </div>
+                `;
+            } else if (page.includes('youtube') || page === 'youtube') {
+                pageContent = `
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #ff0000; margin-bottom: 30px;">YouTube</h1>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                            <div style="background: #f0f0f0; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #ccc; height: 120px;"></div>
+                                <div style="padding: 15px;">
+                                    <p style="font-weight: bold; margin-bottom: 5px;">Как установить SEDA VPN</p>
+                                    <p style="color: #666; font-size: 14px;">Образовательный канал • 245K просмотров</p>
+                                </div>
+                            </div>
+                            <div style="background: #f0f0f0; border-radius: 8px; overflow: hidden;">
+                                <div style="background: #ccc; height: 120px;"></div>
+                                <div style="padding: 15px;">
+                                    <p style="font-weight: bold; margin-bottom: 5px;">Обзор Minecraft 3D</p>
+                                    <p style="color: #666; font-size: 14px;">Игровой канал • 150K просмотров</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (page.includes('sedavpn') || page === 'sedavpn') {
+                pageContent = `
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #0078d7; text-align: center;">SEDA VPN - Официальный сайт</h1>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                            <button style="padding: 15px 30px; background: #00a859; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer;" onclick="openWindow('sedavpn')">
+                                Скачать SEDA VPN
+                            </button>
+                        </div>
+                        <p style="color: #666; line-height: 1.6; text-align: center;">
+                            Самый безопасный VPN сервис с квантовым шифрованием. 
+                            Защитите свою приватность уже сегодня!
+                        </p>
+                    </div>
+                `;
+            } else {
+                pageContent = `
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #0078d7;">Браузер Windows</h1>
+                        <p>Введите адрес сайта в строку выше и нажмите Enter.</p>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = pageContent;
+        }
+
+        // Block Blast Game
+        function startBlockBlast() {
+            const boardElement = document.getElementById('bb-board');
+            const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#40C4FF', '#18FFFF'];
+            
+            window.blockBlastGame = window.blockBlastGame || {};
+            window.blockBlastGame.board = [];
+            window.blockBlastGame.score = 0;
+            window.blockBlastGame.moves = 50;
+            window.blockBlastGame.level = 1;
+            
+            // Создаем доску
+            let html = '';
+            for (let i = 0; i < 64; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                window.blockBlastGame.board.push(color);
+                html += `<div class="block-blast-cell" style="background: ${color};" onclick="blastBlock(${i})"></div>`;
+            }
+            boardElement.innerHTML = html;
+            
+            updateBlockBlastStats();
+        }
+
+        function blastBlock(index) {
+            if (!window.blockBlastGame || window.blockBlastGame.moves <= 0) return;
+            
+            const color = window.blockBlastGame.board[index];
+            const toRemove = [];
+            const visited = new Set();
+            
+            function findGroup(idx) {
+                if (visited.has(idx)) return;
+                visited.add(idx);
+                toRemove.push(idx);
+                
+                const neighbors = [
+                    idx - 8,
+                    idx + 8,
+                    idx % 8 !== 0 ? idx - 1 : -1,
+                    idx % 8 !== 7 ? idx + 1 : -1
+                ];
+                
+                neighbors.forEach(neighbor => {
+                    if (neighbor >= 0 && neighbor < 64 && window.blockBlastGame.board[neighbor] === color) {
+                        findGroup(neighbor);
+                    }
+                });
+            }
+            
+            findGroup(index);
+            
+            if (toRemove.length >= 2) {
+                toRemove.forEach(idx => {
+                    window.blockBlastGame.board[idx] = null;
+                    document.querySelectorAll('.block-blast-cell')[idx].style.background = '#ccc';
+                });
+                
+                window.blockBlastGame.score += toRemove.length * 10;
+                window.blockBlastGame.moves--;
+                
+                if (window.blockBlastGame.score >= window.blockBlastGame.level * 100) {
+                    window.blockBlastGame.level++;
+                    showNotification('Block Blast', `Уровень ${window.blockBlastGame.level}!`);
+                }
+                
+                updateBlockBlastStats();
+                
+                if (window.blockBlastGame.moves === 0) {
+                    setTimeout(() => {
+                        showMessage(`Игра окончена! Ваш счет: ${window.blockBlastGame.score}`);
+                    }, 500);
+                }
+            }
+        }
+
+        function updateBlockBlastStats() {
+            if (!window.blockBlastGame) return;
+            document.getElementById('bb-score').textContent = `Счёт: ${window.blockBlastGame.score}`;
+            document.getElementById('bb-moves').textContent = `Ходы: ${window.blockBlastGame.moves}`;
+            document.getElementById('bb-level').textContent = `Уровень: ${window.blockBlastGame.level}`;
+        }
+
+        // Сапёр
+        function startMinesweeper() {
+            const boardElement = document.getElementById('ms-board');
+            const difficulty = document.getElementById('ms-difficulty').value;
+            
+            let size, mines;
+            switch(difficulty) {
+                case 'easy': size = 8; mines = 10; break;
+                case 'medium': size = 10; mines = 15; break;
+                case 'hard': size = 12; mines = 20; break;
+            }
+            
+            window.minesweeperGame = window.minesweeperGame || {};
+            window.minesweeperGame.board = Array(size * size).fill(0);
+            window.minesweeperGame.revealed = Array(size * size).fill(false);
+            window.minesweeperGame.gameOver = false;
+            window.minesweeperGame.startTime = Date.now();
+            
+            let minesPlaced = 0;
+            while (minesPlaced < mines) {
+                const pos = Math.floor(Math.random() * size * size);
+                if (window.minesweeperGame.board[pos] !== 'M') {
+                    window.minesweeperGame.board[pos] = 'M';
+                    minesPlaced++;
+                }
+            }
+            
+            let html = `<div style="display: grid; grid-template-columns: repeat(${size}, 30px); gap: 2px;">`;
+            for (let i = 0; i < size * size; i++) {
+                html += `<div id="ms-cell-${i}" style="width: 30px; height: 30px; background: #ccc; border: 1px solid #999; display: flex; align-items: center; justify-content: center; cursor: pointer;" 
+                          onclick="revealMine(${i})">?</div>`;
+            }
+            html += '</div>';
+            boardElement.innerHTML = html;
+            
+            document.getElementById('ms-mines').textContent = mines;
+            updateMinesweeperTimer();
+        }
+
+        function revealMine(index) {
+            if (!window.minesweeperGame || window.minesweeperGame.gameOver || window.minesweeperGame.revealed[index]) return;
+            
+            window.minesweeperGame.revealed[index] = true;
+            const cell = document.getElementById(`ms-cell-${index}`);
+            const value = window.minesweeperGame.board[index];
+            
+            if (value === 'M') {
+                cell.textContent = '💣';
+                cell.style.background = '#ff5252';
+                window.minesweeperGame.gameOver = true;
+                showMessage('Игра окончена! Вы наступили на мину!');
+            } else {
+                cell.textContent = '';
+                cell.style.background = '#fff';
+            }
+        }
+
+        function updateMinesweeperTimer() {
+            if (window.minesweeperGame && !window.minesweeperGame.gameOver && window.minesweeperGame.startTime) {
+                const time = Math.floor((Date.now() - window.minesweeperGame.startTime) / 1000);
+                document.getElementById('ms-time').textContent = time;
+                setTimeout(updateMinesweeperTimer, 1000);
+            }
+        }
+
+        // Змейка
+        function startSnake() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            window.snakeGame = window.snakeGame || {};
+            window.snakeGame.canvas = canvas;
+            window.snakeGame.ctx = ctx;
+            window.snakeGame.snake = [{x: 10, y: 10}];
+            window.snakeGame.direction = 'right';
+            window.snakeGame.score = 0;
+            
+            spawnFood();
+            
+            if (window.snakeGame.gameLoop) {
+                clearInterval(window.snakeGame.gameLoop);
+            }
+            
+            window.snakeGame.gameLoop = setInterval(gameLoopSnake, 100);
+            document.addEventListener('keydown', handleSnakeKey);
+        }
+
+        function gameLoopSnake() {
+            if (!window.snakeGame) return;
+            
+            const ctx = window.snakeGame.ctx;
+            const canvas = window.snakeGame.canvas;
+            const snake = window.snakeGame.snake;
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const head = {...snake[0]};
+            switch(window.snakeGame.direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+            
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
+                gameOverSnake();
+                return;
+            }
+            
+            snake.unshift(head);
+            
+            if (head.x === window.snakeGame.food.x && head.y === window.snakeGame.food.y) {
+                window.snakeGame.score += 10;
+                spawnFood();
+            } else {
+                snake.pop();
+            }
+            
+            ctx.fillStyle = '#00ff00';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+            });
+            
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(window.snakeGame.food.x * 20, window.snakeGame.food.y * 20, 18, 18);
+            
+            document.getElementById('snake-score').textContent = window.snakeGame.score;
+        }
+
+        function spawnFood() {
+            if (!window.snakeGame) return;
+            window.snakeGame.food = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 20)
+            };
+        }
+
+        function handleSnakeKey(e) {
+            if (!window.snakeGame) return;
+            switch(e.key) {
+                case 'ArrowUp': if (window.snakeGame.direction !== 'down') window.snakeGame.direction = 'up'; break;
+                case 'ArrowDown': if (window.snakeGame.direction !== 'up') window.snakeGame.direction = 'down'; break;
+                case 'ArrowLeft': if (window.snakeGame.direction !== 'right') window.snakeGame.direction = 'left'; break;
+                case 'ArrowRight': if (window.snakeGame.direction !== 'left') window.snakeGame.direction = 'right'; break;
+            }
+        }
+
+        function gameOverSnake() {
+            if (window.snakeGame && window.snakeGame.gameLoop) {
+                clearInterval(window.snakeGame.gameLoop);
+                showMessage(`Игра окончена! Счет: ${window.snakeGame.score}`);
+            }
+        }
+
+        function pauseSnake() {
+            if (window.snakeGame) {
+                if (window.snakeGame.gameLoop) {
+                    clearInterval(window.snakeGame.gameLoop);
+                    window.snakeGame.gameLoop = null;
+                    showMessage('Игра на паузе');
+                } else {
+                    window.snakeGame.gameLoop = setInterval(gameLoopSnake, 100);
+                }
+            }
+        }
+
+        // Обновление часов
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const date = now.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+            
+            document.getElementById('time').textContent = time;
+            document.getElementById('date').textContent = date;
+        }
+
+        // Обновление панели задач
+        function updateTaskbar() {
+            const taskbarApps = document.getElementById('taskbar-apps');
+            taskbarApps.innerHTML = '';
+            
+            openWindows.forEach(windowId => {
+                const app = document.createElement('div');
+                app.className = 'taskbar-app active';
+                app.textContent = getWindowName(windowId);
+                app.onclick = () => toggleWindow(windowId);
+                taskbarApps.appendChild(app);
+            });
+        }
+
+        function getWindowName(windowId) {
+            const names = {
+                'store': 'Microsoft Store',
+                'minecraft': 'Minecraft 3D',
+                'sedavpn': 'SEDA VPN',
+                'blockblast': 'Block Blast',
+                'minesweeper': 'Сапёр',
+                'snake': 'Змейка',
+                'browser': 'Браузер'
+            };
+            return names[windowId] || 'Приложение';
+        }
+
+        function toggleWindow(windowId) {
+            const windowElement = document.getElementById(`window-${windowId}`);
+            if (windowElement) {
+                if (windowElement.style.display === 'none') {
+                    windowElement.style.display = 'block';
+                    windowElement.style.zIndex = '1000';
+                } else {
+                    windowElement.style.display = 'none';
+                }
+            }
+        }
+
+        // Меню Пуск
+        function toggleStartMenu() {
+            showNotification('Система', 'Меню "Пуск"');
+        }
+
+        // SEDA VPN Countdown
+        function updateCountdown() {
+            const releaseDate = new Date('2026-02-12T00:00:00');
+            const now = new Date();
+            const diff = releaseDate - now;
+            
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            } else {
+                document.getElementById('countdown-timer').innerHTML = '<div style="font-size: 24px; font-weight: bold;">SEDA VPN ВЫШЕЛ!</div>';
+            }
+        }
+
+        function downloadSedaVPN() {
+            showNotification('SEDA VPN', 'Загрузка началась... Имитация загрузки файла.');
+            setTimeout(() => {
+                showMessage('SEDA VPN успешно скачан! Запустите установочный файл.');
+            }, 1500);
+        }
+
+        // Показать уведомление
+        function showNotification(title, message) {
+            notificationCount++;
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: ${20 + (notificationCount - 1) * 80}px;
+                right: 20px;
+                background: white;
+                border-left: 4px solid #0078d7;
+                padding: 15px;
+                border-radius: 5px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                min-width: 300px;
+                max-width: 350px;
+            `;
+            notification.innerHTML = `
+                <strong style="color: #333;">${title}</strong>
+                <p style="color: #666; margin-top: 5px;">${message}</p>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+                notificationCount--;
+            }, 3000);
+        }
+
+        function showMessage(text) {
+            alert(text);
+        }
+
+        // Таймер бездействия для заставки
+        function startIdleTimer() {
+            if (idleTimer) clearTimeout(idleTimer);
+            idleTimer = setTimeout(showScreensaver, 300000);
+        }
+
+        function showScreensaver() {
+            const screensaver = document.getElementById('screensaver');
+            const logo = document.getElementById('screensaver-logo');
+            
+            const logos = {
+                7: 'Windows 7',
+                10: 'Windows 10',
+                11: 'Windows 11'
+            };
+            
+            logo.textContent = logos[currentWindowsVersion] || 'Windows';
+            screensaver.style.display = 'flex';
+        }
+
+        document.addEventListener('mousemove', hideScreensaver);
+        document.addEventListener('keydown', hideScreensaver);
+
+        function hideScreensaver() {
+            const screensaver = document.getElementById('screensaver');
+            if (screensaver.style.display === 'flex') {
+                screensaver.style.display = 'none';
+                startIdleTimer();
+            }
+        }
+    </script>
+</body>
+</html>
